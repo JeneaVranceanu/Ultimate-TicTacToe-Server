@@ -13,7 +13,11 @@
           overflow: hidden;
           min-height: 300px;
           max-height: 300px;
-      }
+        }
+
+        .required {
+            border-color: rgb(209, 16, 90) !important;
+        }
     </style>
 </head>
 
@@ -28,8 +32,10 @@
 <div class="container">
     <br/>
     <div class="row">
-        <input id="name" class="col-md-4" type="text" placeholder="your name">
-        <button id="connect" class="col-md-1 btn btn-primary" type="button">connect</button>
+        <span class="col-md-12">Chat</span>
+        <input id="ip" class="col-md-4" type="text" placeholder="Room IP">
+        <input id="name" class="col-md-4" type="text" placeholder="Your name">
+        <button id="connect" class="col-md-1 btn btn-primary" type="button">Connect</button>
         <br/>
         <br/>
     </div>
@@ -55,6 +61,24 @@
       $( document ).ready(function() {
           $("#connect").click(connect);
           $("#send").click(sendMessage);
+          
+          $(document).on("click", ".required", function () {
+                $(this).removeClass("required");
+                var elId = $(this).attr("id");
+                $(this).attr("placeholder", "Please enter " + elId)
+          });
+
+          $(document).on("keypress", ".required", function () {
+                $(this).removeClass("required");
+                var elId = $(this).attr("id");
+                $(this).attr("placeholder", "Please enter " + elId)
+          });
+
+          $(document).keypress(function(event) {
+            if(event.keyCode == 13 || event.which == 13) {
+                  connect();
+            }
+          });
 
           $("#name").keypress(function(event){
               if(event.keyCode == 13 || event.which == 13) {
@@ -77,22 +101,40 @@
 
       var connect = function() {
           if (! connected) {
-              var name = $("#name").val();
-              console.log("Val: " + name);
-              socket = new WebSocket("ws://" + location.host + "/chat/" + name);
-              socket.onopen = function() {
-                  connected = true;
-                  console.log("Connected to the web socket");
-                  $("#send").attr("disabled", false);
-                  $("#connect").attr("disabled", true);
-                  $("#name").attr("disabled", true);
-                  $("#msg").focus();
-              };
-              socket.onmessage =function(m) {
-                  console.log("Got message: " + m.data);
-                  $("#chat").append(m.data + "\n");
-                  scrollToBottom();
-              };
+              var name  = $("#name");
+              var ip    = $("#ip");
+              var valid = true;
+
+              if (!ip.val() || !(/\d{1,3}[.]\d{1,3}[.]\d{1,3}[.]\d{1,3}/.test(ip.val()))) {
+                if (!ip.val()) {
+                    ip.attr("placeholder", "Please enter ip");
+                }
+                ip.addClass("required");
+                valid = false;
+              }
+              if (!name.val()) {
+                name.attr("placeholder", "Please enter name");
+                name.addClass("required");
+                valid = false;
+              }
+              if (valid) {
+                console.log("Val: " + name.val());
+                var param = `${ip.val()}&${name.val()}`
+                socket = new WebSocket(`ws://${location.host}/chat/${param}`);
+                socket.onopen = function() {
+                    connected = true;
+                    console.log("Connected to the web socket");
+                    $("#send").attr("disabled", false);
+                    $("#connect").attr("disabled", true);
+                    $("#name").attr("disabled", true);
+                    $("#msg").focus();
+                };
+                socket.onmessage =function(m) {
+                    console.log("Got message: " + m.data);
+                    $("#chat").append(m.data + "\n");
+                    scrollToBottom();
+                };
+              }
           }
       };
 
