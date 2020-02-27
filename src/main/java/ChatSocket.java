@@ -2,40 +2,57 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+
+import org.slf4j.Logger;
+
+import utils.Params;
+import utils.ParamsParser;
+
 import javax.websocket.Session;
 
 @ServerEndpoint("/chat/{params}")
 @ApplicationScoped
 public class ChatSocket {
 
+    @Inject
+    Logger logger;
+
     String field = "";
     Map<String, Game> sessions = new ConcurrentHashMap<>();
 
     @OnOpen
     public void onOpen(Session session, @PathParam("params") String params) {
-        String[] paramArray = params.split("&");
+        Params playerParams = ParamsParser.parseParamString(params);
+        logger.info("Open ws connection with parameters: {}", params);
+
         Game game = null;
-        if (!sessions.containsKey(paramArray[0])) {
+        if (!sessions.containsKey(playerParams.getIp())) {
             game = new Game();
-            game.createGame(paramArray[0], paramArray[1], session);
-            sessions.put(paramArray[0], game);
+            game.createGame(playerParams.getIp(), playerParams.getName(), session);
+            sessions.put(playerParams.getIp(), game);
+            logger.info("Player X with Name: {} create game for IP: {}", playerParams.getName(), playerParams.getIp());
         } else {
-            game = sessions.get(paramArray[0]);
-            game.connectToGame(paramArray[0], paramArray[1], session);
+            game = sessions.get(playerParams.getIp());
+            game.connectToGame(playerParams.getIp(), playerParams.getName(), session);
+            logger.info("Player O with Name: {} connect to game by IP: {}", playerParams.getName(), playerParams.getIp());
         }
 
-        broadcast(game);
+        broadcast(game, game.info());
     }
 
     @OnClose
-    public void onClose(Session session, @PathParam("username") String username) {
-        // sessions.remove(username);
+    public void onClose(Session session, @PathParam("params") String params) {
+        Params playerParams = ParamsParser.parseParamString(params);
+        logger.info("Close ws connection with parameters: {}", params);
+        broadcastAll(String.format("Player %s leave the game.", playerParams.getName()));
+        removeSession(playerParams.getIp());
         // broadcast("User " + username + " left");
     }
 
@@ -50,17 +67,31 @@ public class ChatSocket {
         // broadcast(">> " + username + ": " + message);
     }
 
-    private void broadcast(Game game) {
-        game.playerX.getSession().getAsyncRemote().sendObject(game.info(), result ->  {
-                    if (result.getException() != null) {
-                        System.out.println("Unable to send message: " + result.getException());
-                    }
-                });
-        game.playerO.getSession().getAsyncRemote().sendObject(game.info(), result ->  {
+    private void broadcast(Game game, String message) {
+        playerBroadcast(game.playerX, message);
+        playerBroadcast(game.playerO, message);
+    }
+
+    private void broadcastAll(String message) {
+        sessions.entrySet().forEach(entry -> {
+            playerBroadcast(entry.getValue().playerX, message);
+            playerBroadcast(entry.getValue().playerO, message);
+        });
+    }
+
+    private void playerBroadcast(Player player, String message) {
+        player.getSession().getAsyncRemote().sendObject(message, result ->  {
             if (result.getException() != null) {
-                System.out.println("Unable to send message: " + result.getException());
+                logger.error("Unable to send message to {} session will be cleared", player.ip);
+                removeSession(player.ip);
             }
         });
+    }
+
+    private void removeSession(String ip) {
+        if (ip != null) {
+            sessions.remove(ip);
+        }
     }
 
 }
