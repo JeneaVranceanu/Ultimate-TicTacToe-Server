@@ -2,16 +2,16 @@ package utils;
 
 public class Params {
 
-    private String ip;
+    private String room;
     private String name;
 
-    Params(String ip, String name) { 
-        this.ip = ip;
+    Params(String room, String name) { 
+        this.room = room;
         this.name = name;
     }
 
-    public String getIp() {
-        return ip;
+    public String getRoom() {
+        return room;
     }
 
     public String getName() {

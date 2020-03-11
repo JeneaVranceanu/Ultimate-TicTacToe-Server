@@ -1,4 +1,4 @@
-var initConnection = (ip, name) => {
-    console.log('initConnection');
-    wsConnection(ip, name);
+var initConnection = (room, name) => {
+    console.log('initConnection', room, name, "asdas");
+    wsConnection(room, name);
 }

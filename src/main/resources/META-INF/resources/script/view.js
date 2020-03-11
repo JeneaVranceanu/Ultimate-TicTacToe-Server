@@ -63,7 +63,7 @@ var viewConnect = () => {
 	}
 
 	if (valid) {
-		controllerOnConnect();
+		controllerOnConnect($('#room').val(), $('#name').val());
 	}
 }
 
