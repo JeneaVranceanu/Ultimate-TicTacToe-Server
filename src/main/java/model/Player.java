@@ -1,14 +1,16 @@
+package model;
+
 import javax.websocket.Session;
 
 public class Player {
 
-    Session session;
-    char mark;
-    String ip;
-    String name;
+    private Session session;
+    private char mark;
+    private String room;
+    private String name;
 
-    public Player(String ip, String name, char mark, Session session) {
-        this.ip = ip;
+    public Player(String room, String name, char mark, Session session) {
+        this.room = room;
         this.name = name;
         this.mark = mark;
         this.session = session;
@@ -18,8 +20,8 @@ public class Player {
         return name;
     }
 
-    public String getIp() {
-        return ip;
+    public String getRoom() {
+        return room;
     }
 
     public char getMark() {
@@ -32,7 +34,7 @@ public class Player {
 
     @Override
     public String toString() {
-        return String.format("Name: %s, IP: %s, Mark: %c", name, ip, mark);
+        return String.format("Name: %s, IP: %s, Mark: %c", name, room, mark);
     }
     
 }

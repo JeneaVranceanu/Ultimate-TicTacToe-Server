@@ -1,11 +1,12 @@
 var connected = false;
 var socket;
 
-var wsConnection = (ip, name) => {
+var wsConnection = (room, name) => {
     if (!connected) {
-        console.log('wsConnection');
-        console.log("IP: " + ip, " Name: " + name);
-        var param = `${ip}&${name}`;
+        console.log('Init ws connection');
+        console.log("Room#: " + room);
+        console.log("Name: " + name);
+        var param = `${room}&${name}`;
         socket = new WebSocket(`ws://${location.host}/chat/${param}`);
 
         socket.onopen = () => {
@@ -22,7 +23,7 @@ var wsConnection = (ip, name) => {
         };
 
         socket.onclose = (m) => {
-            console.log('connection closed');
+            console.log('Connection closed', m);
         }
 
     }
