@@ -1,22 +1,15 @@
 var controllerOnConnect;
+var controllerOnClose;
 
 $(document).ready(() => {
 
 	/** Assign Event listeners */
 
+	$('#enter').click(viewEnterToMain);
+
 	$('#connect').click(viewConnect);
 
-	$('#connect').keypress((event) => {
-		if (event.keyCode == 13 || event.which == 13) {
-			viewConnect();
-		}
-	});
-
-	$(document).keypress((event) => {
-		if (event.keyCode == 13 || event.which == 13) {
-			viewConnect();
-		}
-	});
+	$('#close').click(viewClose);
 
 	$('#name, #room').click(() => {
 		$('#name, #room').removeClass("required");
@@ -36,8 +29,29 @@ $(document).ready(() => {
 		viewStopGame();
 	})
 
+	$('#game-screen').hide();
+	$('#main-screen').hide();
+	$('#menu-button').hide();
+	$('#close').hide();
 
 });
+
+/** Interfaces */
+
+var viewEnterToMain = () => {
+
+	var valid = true;
+	if (!$('#name').val()) {
+		$('#name').addClass("required");
+		valid = false;
+	}
+
+	if (valid) {
+		$('#name-label').text(`Player: ${$('#name').val()}`);
+		$('#start-screen').hide();
+		$('#main-screen').show();
+	}
+}
 
 var viewStartGame = () => {
 	$('#main-screen').hide();
@@ -53,10 +67,6 @@ var viewStopGame = () => {
 
 var viewConnect = () => {
 	var valid = true;
-	if (!$('#name').val()) {
-		$('#name').addClass("required");
-		valid = false;
-	}
 	if (!$('#room').val()) {
 		$('#room').addClass("required");
 		valid = false;
@@ -64,13 +74,29 @@ var viewConnect = () => {
 
 	if (valid) {
 		controllerOnConnect($('#room').val(), $('#name').val());
+		$('#connect').hide();
+		$('#close').show();
 	}
 }
 
-var scrollToBottom = () => {
-	$('#chat').scrollTop($('#chat')[0].scrollHeight);
-};
+var viewClose = () => {
+	controllerOnClose();
+	$('#room').val('');
+	$('#chat').val('');
+	$('#connect').show();
+	$('#close').hide();
+}
+
+var viewPrintToChat = (message) => {
+	$('#chat').val(message);
+}
+
+/** Dependencies */
 
 var setViewOnConnectListener = (funOnConnectClick) => {
 	controllerOnConnect = funOnConnectClick;
+}
+
+var setViewOnCloseListener = (funOnCloseClick) => {
+	controllerOnClose = funOnCloseClick;
 }

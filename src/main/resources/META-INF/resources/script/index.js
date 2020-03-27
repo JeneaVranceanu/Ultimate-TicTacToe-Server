@@ -1,9 +1,7 @@
-var sendMessage = (message) => {
-	if (connected) {
-		var value = $("#msg").val();
-		socket.send(value);
-		$("#msg").val("");
-	}
-};
+/** Dependencies */
 
-setViewOnConnectListener(initConnection);
+setViewOnConnectListener(cnInitConnection);
+setViewOnCloseListener(cnCloseConnection);
+setWsOnMessageListener(cnMessageListener);
+setWsOnCloseListener(cnCloseListener);
+setCnMessagePrinter(viewPrintToChat)

@@ -14,13 +14,14 @@
 <body>
     <nav class="navbar navbar-default navbar-pf" role="navigation">
         <div class="navbar-header">
-            <a class="navbar-brand header" href="/">
+            <h1 id="name-label"></h1>
+            <a class="navbar-brand header">
                 <h1><strong>Tic Tac Toe</strong></h1>
             </a>
             <button id="menu-button" class="btn btn-primary" type="button">Back</button>
         </div>
     </nav>
-    <div id="main-screen" class="container">
+    <div id="start-screen" class="container">
         <br />
         <div class="row">
             <div class="form">
@@ -31,6 +32,13 @@
                     </span>
                 </label>
             </div>
+        </div>
+        <div class="row">
+            <button id="enter" class="action-button btn btn-primary" type="button">Enter</button>
+        </div>
+    </div>
+    <div id="main-screen" class="container">
+        <div class="row">
             <div class="form">
                 <input id="room" name="room" type="text" autocomplete="off" maxlength="3" required>
                 <label for="room" class="label-name">
@@ -41,10 +49,14 @@
             </div>
         </div>
         <div class="row">
+            <label for="chat" id="chat-label">
+                <span>
+                    Open rooms #
+                </span>
+            </label>
             <button id="connect" class="action-button btn btn-primary" type="button">Connect</button>
-        </div>
-        <div class="row">
-            <textarea id="chat"></textarea>
+            <button id="close" class="action-button btn btn-primary" type="button">Close</button>
+            <textarea id="chat" name="chat"></textarea>
         </div>
     </div>
     <div id="game-screen" class="container">

@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -38,7 +37,8 @@ public class ChatSocket {
     @OnOpen
     public void onOpen(Session session, @PathParam("params") String params) {
         Game game = cnController.onOpen(session, params, sessions);
-        broadcast(game, game.info());
+        logger.info("Open connection: {}", game.info());
+        broadcastAll(game.info());
     }
 
     @OnClose
@@ -51,14 +51,17 @@ public class ChatSocket {
     }
 
     @OnError
-    public void onError(Session session, @PathParam("username") String username, Throwable throwable) {
+    public void onError(Session session, @PathParam("params") String params, Throwable throwable) {
         // sessions.remove(username);
         // broadcast("User " + username + " left on error: " + throwable);
+        logger.info("Web socket error: {}", throwable.getMessage());
     }
 
     @OnMessage
-    public void onMessage(String message, @PathParam("username") String username) {
-        // broadcast(">> " + username + ": " + message);
+    public void onMessage(String message, @PathParam("params") String params) {
+        logger.info("Message received: {}", message);
+        Params playerParams = ParamsParser.parseParamString(params);
+        broadcast(sessions.get(playerParams.getRoom()), "asdasd");
     }
 
     private void broadcast(Game game, String message) {
@@ -79,6 +82,7 @@ public class ChatSocket {
                 logger.error("Unable to send message to {} session will be cleared", player.getRoom());
                 removeSession(player.getRoom());
             }
+            logger.info("Send message: {} to: {} ", message, player.getName());
         });
     }
 
