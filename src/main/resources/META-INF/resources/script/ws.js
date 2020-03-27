@@ -1,5 +1,9 @@
 var connected = false;
 var socket;
+var wsOnMessageListener;
+var wsOnCloseListener;
+
+/** Interfaces */
 
 var wsConnection = (room, name) => {
     if (!connected) {
@@ -7,7 +11,7 @@ var wsConnection = (room, name) => {
         console.log("Room#: " + room);
         console.log("Name: " + name);
         var param = `${room}&${name}`;
-        socket = new WebSocket(`ws://${location.host}/chat/${param}`);
+        socket = new WebSocket(`ws://${location.hostname}:8080/chat/${param}`);
 
         socket.onopen = () => {
             connected = true;
@@ -15,16 +19,26 @@ var wsConnection = (room, name) => {
         };
 
         /** Parse message 3 types - start, player turn, player win */
-        socket.onmessage = (m) => {
-            console.log("Got message: " + m.data);
-            // $("#chat").append(m.data + "\n");
-            // scrollToBottom();
-            // startGame();
-        };
-
-        socket.onclose = (m) => {
-            console.log('Connection closed', m);
-        }
+        socket.onmessage = wsOnMessageListener;
+        socket.onclose = wsOnCloseListener;
 
     }
+}
+
+var wsClose = () => {
+    if (connected) {
+        console.log('Close ws connection');
+        socket.close();
+        connected = false;
+    }
+}
+
+/** Dependencies */
+
+var setWsOnMessageListener = (onMessageListener) => {
+    wsOnMessageListener = onMessageListener;
+}
+
+var setWsOnCloseListener = (onCloseListener) => {
+    wsOnCloseListener = onCloseListener;
 }
