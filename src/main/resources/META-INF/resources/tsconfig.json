@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+      "target": "esnext",
+      "module": "commonjs",
+      "outDir": "script/typescript",
+      // For a better debugging. Source map basically maps minified code to the source.
+      "sourceMap": true,
+    }
+  }

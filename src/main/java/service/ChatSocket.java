@@ -70,9 +70,9 @@ public class ChatSocket {
     }
 
     private void broadcastAll(String message) {
-        sessions.entrySet().forEach(entry -> {
-            playerBroadcast(entry.getValue().getPlayerX(), message);
-            playerBroadcast(entry.getValue().getPlayerO(), message);
+        sessions.forEach((key, value) -> {
+            playerBroadcast(value.getPlayerX(), message);
+            playerBroadcast(value.getPlayerO(), message);
         });
     }
 
