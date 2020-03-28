@@ -21,7 +21,6 @@ var wsConnection = (room, name) => {
         /** Parse message 3 types - start, player turn, player win */
         socket.onmessage = wsOnMessageListener;
         socket.onclose = wsOnCloseListener;
-
     }
 }
 

@@ -1,5 +1,6 @@
 var controllerOnConnect;
 var controllerOnClose;
+var gameBoardController;
 
 $(document).ready(() => {
 
@@ -54,6 +55,12 @@ var viewEnterToMain = () => {
 }
 
 var viewStartGame = () => {
+	if (gameBoardController != null && gameBoardController !== undefined) {
+		gameBoardController.detach();
+	}
+	delete gameBoardController;
+	gameBoardController = new GameBoardController(Math.floor(Math.random() * 100) % 2 == 0 ? Shape.O : Shape.X);
+	
 	$('#main-screen').hide();
 	$('#game-screen').show();
 	$('#menu-button').show();
@@ -77,6 +84,8 @@ var viewConnect = () => {
 		$('#connect').hide();
 		$('#close').show();
 	}
+
+	viewStartGame();
 }
 
 var viewClose = () => {
