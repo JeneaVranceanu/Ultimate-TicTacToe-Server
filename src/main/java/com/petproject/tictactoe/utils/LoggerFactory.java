@@ -1,4 +1,4 @@
-package utils;
+package com.petproject.tictactoe.utils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
