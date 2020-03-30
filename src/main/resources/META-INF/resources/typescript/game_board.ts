@@ -3,6 +3,14 @@ enum Shape {
     O,
 }
 
+/**
+ * <p>GameBoardController class is responsible for drawing a game board,
+ * drawing shapes on the game board, receiving and processing user events like
+ * "mousedown". <br/>
+ * <p>It holds the state of each game board cell and does not allow
+ * to place a shape on the occupied cell. Board is disabled and does not receive any
+ * user events while waiting for opponent's turn to be made.
+ */
 class GameBoardController {
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
@@ -18,9 +26,9 @@ class GameBoardController {
                                 [false, false, false]];
 
     private audioSrcs = [
-        "../assets/audio/balloon_snap.mp3",
-        "../assets/audio/opponent_move_2.mp3",
-        "../assets/audio/opponent_move.mp3",
+        // "../assets/audio/balloon_snap.mp3",
+        // "../assets/audio/opponent_move_2.mp3",
+        // "../assets/audio/opponent_move.mp3",
         "../assets/audio/player_move.mp3"
     ];
 
@@ -40,14 +48,14 @@ class GameBoardController {
         
         this.rowHeight = this.canvas.height / 3;
         this.columnWidth = this.canvas.width / 3;
-    
-        this.createUserEvents();
     }
 
     public detach() {
-        this.canvas.removeEventListener("mouseup", this.pressEventHandler);
+        this.setUserEventsEnabled(false);
         delete this.canvas;
         delete this.context;
+        delete this.markO;
+        delete this.markX;
     }
 
     // @ts-ignore
@@ -74,13 +82,16 @@ class GameBoardController {
         this.context.restore();
 
         // TODO: remove into separate file
-        new Audio(this.audioSrcs[Math.floor(Math.random() * 100) % this.audioSrcs.length]).play();
+        // new Audio(this.audioSrcs[Math.floor(Math.random() * 100) % this.audioSrcs.length]).play();
+        new Audio(this.audioSrcs[0]).play();
     }
 
-    private createUserEvents() {
-        let canvas = this.canvas;
-    
-        canvas.addEventListener("mouseup", this.pressEventHandler);
+    private setUserEventsEnabled(enable: boolean) {
+        if (enable) {
+            this.canvas.addEventListener("mouseup", this.pressEventHandler);
+        } else {
+            this.canvas.removeEventListener("mouseup", this.pressEventHandler);
+        }
     }
 
     private boardClicked(x: number, y: number) {
