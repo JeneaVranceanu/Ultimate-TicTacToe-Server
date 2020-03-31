@@ -95,6 +95,11 @@ class GameBoardController {
     // @ts-ignore
     drawPlayedShape(shape, xPosition, yPosition) {
         let image = shape == Shape.X ? this.markX : this.markO;
+        image.onload = null;
+        if (!image.complete || image.naturalHeight == 0) {
+            image.onload = () => this.drawPlayedShape(shape, xPosition, yPosition);
+            return;
+        }
         if (this.isCellOccupied(xPosition, yPosition)) {
             return;
         }
@@ -104,20 +109,9 @@ class GameBoardController {
         let y = this.rowHeight * yPosition + Math.abs(this.rowHeight - image.height) / 2;
         let x = this.columnWidth * xPosition +
             Math.abs(this.columnWidth - image.width) / 2;
-        this.draw(image, x, y);
-    }
-    draw(image, x, y) {
-        image.onload = null;
-        if (!image.complete || image.naturalHeight == 0) {
-            image.onload = () => this.draw(image, x, y);
-        }
-        else {
-            this.context.translate(x, y);
-            this.context.fillStyle = (Math.random() * 100) % 2 == 0 ? "#FF0000" : "#00FF00";
-            this.context.fillRect(0, 0, this.columnWidth, this.columnWidth);
-            this.context.drawImage(image, 0, 0, image.width, image.height);
-            this.context.restore();
-        }
+        this.context.translate(x, y);
+        this.context.drawImage(image, 0, 0, image.width, image.height);
+        this.context.restore();
     }
     setCellOccupied(xPosition, yPosition) {
         this.boardCellsStatus[yPosition][xPosition] = true;
