@@ -85,7 +85,7 @@ public class Message {
         }
 
         if (field != null) {
-            json.add("field", field.toString());
+            json.add("field", field.toJsonArray());
         }
 
         return json.build().toString();

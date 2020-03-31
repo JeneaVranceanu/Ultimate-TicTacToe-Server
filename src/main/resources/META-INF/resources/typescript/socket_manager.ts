@@ -46,6 +46,12 @@ class SocketConnectionManager {
         }
     }
 
+    public send(message: string) {
+        if (this.connected) {
+            this.socket.send(message);
+        }
+    }
+
     /** Dependencies */
 
     // var setWsOnMessageListener = (onMessageListener) => {
