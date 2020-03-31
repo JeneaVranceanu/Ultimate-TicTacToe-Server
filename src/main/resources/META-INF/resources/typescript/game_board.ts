@@ -102,6 +102,11 @@ class GameBoardController {
   // @ts-ignore
   private drawPlayedShape(shape: Shape, xPosition: number, yPosition: number) {
     let image = shape == Shape.X ? this.markX : this.markO;
+    image.onload = null;
+    if (!image.complete || image.naturalHeight == 0) {
+      image.onload = () => this.drawPlayedShape(shape, xPosition, yPosition);
+      return;
+    }
 
     if (this.isCellOccupied(xPosition, yPosition)) {
       return;
@@ -117,20 +122,9 @@ class GameBoardController {
       this.columnWidth * xPosition +
       Math.abs(this.columnWidth - image.width) / 2;
 
-    this.draw(image, x, y);
-  }
-
-  private draw(image: HTMLImageElement, x: number, y: number) {
-    image.onload = null;
-    if (!image.complete || image.naturalHeight == 0) {
-      image.onload = () => this.draw(image, x, y);
-    } else {
-      this.context.translate(x, y);
-      this.context.fillStyle = (Math.random() * 100) % 2 == 0 ? "#FF0000" : "#00FF00";
-      this.context.fillRect(0,0, this.columnWidth, this.columnWidth);
-      this.context.drawImage(image, 0, 0, image.width, image.height);
-      this.context.restore();
-    }
+    this.context.translate(x, y);
+    this.context.drawImage(image, 0, 0, image.width, image.height);
+    this.context.restore();
   }
 
   private setCellOccupied(xPosition: number, yPosition: number) {
