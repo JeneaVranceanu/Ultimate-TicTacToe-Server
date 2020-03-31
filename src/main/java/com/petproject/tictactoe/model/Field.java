@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 
 public class Field {
@@ -44,9 +45,13 @@ public class Field {
 
     @Override
     public String toString() {
+        return toJsonArray().toString();
+    }
+
+    public JsonArray toJsonArray() {
         JsonArrayBuilder json = Json.createArrayBuilder();
-        field.forEach(cell -> json.add(cell.getMarkName()));
-        return json.build().toString();
+        field.forEach(cell -> json.add(cell.getMarkName()));;
+        return json.build();
     }
 
     public enum Size {
