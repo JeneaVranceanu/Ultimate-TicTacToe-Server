@@ -223,13 +223,6 @@ class MainScreen {
                 boardState[i][j] = json.field[3 * i + j] != "EMPTY";
               }
             }
-            // for (var i = 0, j = 0; i < json.field.length; i++) {
-            //   let newI = Math.floor(i / 3);
-            //   boardState[newI][j] = json.field[i] != "EMPTY";
-            //   if (newI % 3 == 2) {
-            //     j++;
-            //   }
-            // }
             this.gameBoardController.updateBoardState(boardState);
           }
           //this.gameBoardController.opponentPlacedShapeInCell(x,y);
