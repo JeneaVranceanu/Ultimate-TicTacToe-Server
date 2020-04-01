@@ -74,12 +74,6 @@ class GameBoardController {
     this.playerShape = playerShape;
     this.markO.src = "../assets/o_mark_95.png";
     this.markX.src = "../assets/x_mark_95.png";
-    this.markX.onload = () => {
-      console.log("this.markX is loaded!");
-    };
-    this.markO.onload = () => {
-      console.log("this.markO is loaded!");
-    };
 
     this.canvas = document.getElementById("canvas") as HTMLCanvasElement;
     this.context = this.canvas.getContext("2d");
