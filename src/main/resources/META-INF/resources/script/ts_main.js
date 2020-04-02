@@ -16,13 +16,13 @@ var Shape;
  */
 class GameBoardController {
     constructor(playerShape) {
-        // false - cell is empty
-        // true - cell is occupied
-        // if (boardCellsStatus[1][1]) { cell is occupied. must not allow drawing here. }
+        // null - cell is empty
+        // Shape.X || Shape.O - cell is occupied
+        // if (boardCellsStatus[1][1] != null) { cell is occupied. must not allow drawing here. }
         this.boardCellsStatus = [
-            [false, false, false],
-            [false, false, false],
-            [false, false, false]
+            [null, null, null],
+            [null, null, null],
+            [null, null, null]
         ];
         this.playerClickedSounds = [
             new Audio("../assets/audio/balloon_snap.mp3"),
@@ -57,30 +57,76 @@ class GameBoardController {
         this.playerShape = playerShape;
         this.markO.src = "../assets/o_mark_95.png";
         this.markX.src = "../assets/x_mark_95.png";
-        this.markX.onload = () => {
-            console.log("this.markX is loaded!");
-        };
-        this.markO.onload = () => {
-            console.log("this.markO is loaded!");
-        };
         this.canvas = document.getElementById("canvas");
         this.context = this.canvas.getContext("2d");
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.rowHeight = this.canvas.height / 3;
         this.columnWidth = this.canvas.width / 3;
     }
-    updateBoardState(boardState) {
-        // Coordinates of changed cell
-        let x = 0, y = 0;
-        for (let i = 0; i < boardState.length; i++) {
-            for (let j = 0; j < boardState[i].length; j++) {
-                if (this.boardCellsStatus[i][j] != boardState[i][j]) {
-                    y = i;
-                    x = j;
-                    this.opponentPlacedShape(x, y);
-                    return;
-                }
+    endGame(didPlayerWin, gameStory) {
+        let interestedShape = didPlayerWin ? this.playerShape : (this.playerShape == Shape.X ? Shape.O : Shape.X);
+        let interestedShapeString = interestedShape == Shape.O ? "O" : "X";
+        let filteredStory = gameStory.filter((value) => {
+            return value.shape.toUpperCase() == interestedShapeString;
+        });
+        let winnerPath = new Array();
+        // The last element of filtered game story
+        // is automatically part of the winner path
+        winnerPath[0] = filteredStory.pop();
+        filteredStory = filteredStory.sort((a, b) => {
+            if (a.y == b.y) {
+                return a.x - b.x;
             }
+            return a.y > b.y ? 1 : -1;
+        });
+        let currentTurn = winnerPath[0];
+        //Not the most efficient way to find a path
+        for (let i = 0; i < filteredStory.length && winnerPath.length < 3; i++) {
+            let nextTurn = filteredStory[i];
+            let isOnTheSameLine = [nextTurn.x - 1, nextTurn.x + 1].includes(currentTurn.x);
+            let isOnTheSameColumn = [nextTurn.y - 1, nextTurn.y + 1].includes(currentTurn.y);
+            if (isOnTheSameLine || isOnTheSameColumn || this.areTurnsOnTheSameDiagonal(nextTurn, currentTurn)) {
+                winnerPath.push(nextTurn);
+                currentTurn = nextTurn;
+            }
+        }
+        let image = new Image();
+        image.src = didPlayerWin ? "../assets/gold_crown.png" : "../assets/crossed_swords.png";
+        if (this.isImageLoaded(image)) {
+            winnerPath.forEach((value) => this.drawImage(image, value.x, value.y));
+        }
+        else {
+            this.triggerLoadingOfImageIfNotLoaded(image);
+            image.onload = () => winnerPath.forEach((value) => this.drawImage(image, value.x, value.y));
+        }
+    }
+    isImageLoaded(image) {
+        return image.complete && image.naturalHeight != 0;
+    }
+    triggerLoadingOfImageIfNotLoaded(image) {
+        this.context.save();
+        this.context.drawImage(image, 0, 0, image.width, image.height);
+        this.context.restore();
+    }
+    areTurnsOnTheSameDiagonal(pivot, nextPoint) {
+        let nonDiagonalPoints = [0, 2];
+        let isNextPointOnDiagonal = !(nextPoint.x == 1 && nonDiagonalPoints.includes(nextPoint.y)
+            || nonDiagonalPoints.includes(nextPoint.x) && nextPoint.y == 1);
+        if (!isNextPointOnDiagonal) {
+            return false;
+        }
+        if (pivot.x == 1 && pivot.y == 1) {
+            // Pivot is in the middle. And nextPoint is also in the middle.
+            return true;
+        }
+        else if (pivot.x == 1 && nonDiagonalPoints.includes(pivot.y)
+            || nonDiagonalPoints.includes(pivot.x) && pivot.y == 1) {
+            // Pivot is not on the diagonal
+            return false;
+        }
+        else {
+            //Pivot is somewhere in the corner.
+            return nextPoint.x != pivot.x || nextPoint.y != pivot.y;
         }
     }
     detach() {
@@ -95,16 +141,18 @@ class GameBoardController {
     // @ts-ignore
     drawPlayedShape(shape, xPosition, yPosition) {
         let image = shape == Shape.X ? this.markX : this.markO;
-        image.onload = null;
-        if (!image.complete || image.naturalHeight == 0) {
-            image.onload = () => this.drawPlayedShape(shape, xPosition, yPosition);
-            return;
-        }
         if (this.isCellOccupied(xPosition, yPosition)) {
             return;
         }
-        console.log("drawPlayedShape " + shape);
-        this.setCellOccupied(xPosition, yPosition);
+        this.setCellOccupied(xPosition, yPosition, shape);
+        this.drawImage(image, xPosition, yPosition);
+    }
+    drawImage(image, xPosition, yPosition) {
+        image.onload = null;
+        if (!this.isImageLoaded(image)) {
+            image.onload = () => this.drawImage(image, xPosition, yPosition);
+            return;
+        }
         this.context.save();
         let y = this.rowHeight * yPosition + Math.abs(this.rowHeight - image.height) / 2;
         let x = this.columnWidth * xPosition +
@@ -113,8 +161,8 @@ class GameBoardController {
         this.context.drawImage(image, 0, 0, image.width, image.height);
         this.context.restore();
     }
-    setCellOccupied(xPosition, yPosition) {
-        this.boardCellsStatus[yPosition][xPosition] = true;
+    setCellOccupied(xPosition, yPosition, shape) {
+        this.boardCellsStatus[yPosition][xPosition] = shape;
     }
     /**
      *
@@ -122,7 +170,7 @@ class GameBoardController {
      * @param yPosition vertical postition of a cell [0,2]
      */
     isCellOccupied(xPosition, yPosition) {
-        return this.boardCellsStatus[yPosition][xPosition];
+        return this.boardCellsStatus[yPosition][xPosition] != null;
     }
     enableGameBoard(enable) {
         this.setUserEventsEnabled(enable);
@@ -279,12 +327,106 @@ class SocketConnectionManager {
         }
     }
 }
+/**
+ * Received on successful socket connection
+ */
+class RegisteredReceivedMessage {
+    static getType() { return "REGISTERED"; }
+}
+/**
+ * Emits a request to open a room with given name.
+ */
+class RoomCreateEmitMessage {
+    constructor() {
+        this.type = "ROOM_CREATE";
+    }
+}
+/**
+ * Room successfully created. Player waits for GAME_START.
+ */
+class RoomCreateReceiveMessage {
+    static getType() { return "ROOM_CREATE"; }
+}
+/**
+ * Emits a request to close a room.
+ * PlayerId must match with the owner ID of the room.
+ * Impossible if the game started - interpreted as leaving/losing.
+ */
+class RoomCloseEmitMessage {
+    constructor() {
+        this.type = "ROOM_CLOSE";
+    }
+}
+/**
+ * Emits a request to connect to open room.
+ * Now waiting for GAME_START.
+ */
+class RoomConnectEmitMessage {
+    constructor() {
+        this.type = "ROOM_CONNECT";
+    }
+}
+/**
+ * "Received when game starts.
+ * Player ID with ""firstPlayerId"" makes the first move."
+ */
+class GameStartedReceiveMessage {
+    static getType() { return "GAME_START"; }
+}
+/**
+ * Received when game ends.
+ */
+class GameEndedReceiveMessage {
+    static getType() { return "GAME_END"; }
+}
+/**
+ * Received when an opponent has completed its turn.
+ */
+class TurnReceiveMessage {
+    static getType() { return "TURN"; }
+}
+class Turn {
+    constructor(xx, yy, ss) {
+        this.x = xx;
+        this.y = yy;
+        this.shape = ss;
+    }
+}
+/**
+ * Emits a message after making a turn.
+ * Identifies occupied cell and by whom it was occupied.
+ */
+class TurnEmitMessage {
+    static getType() { return "TURN"; }
+}
+/**
+ * Emits a message requesting list of all rooms
+ */
+class RoomListEmitMessage {
+    constructor() {
+        this.type = "ROOM_LIST";
+    }
+}
+/**
+ * Received as a response for {@link RoomListEmitMessage} emit message.
+ * Contains a list of all rooms available.
+ *
+ * Also is returned when new room is created or closed
+ */
+class RoomListReceiveMessage {
+    static getType() { return "ROOM_LIST"; }
+}
+class Room {
+}
 class MainScreen {
     constructor() {
         // Assigned by the user before connecting to the serve
         this.playerName = "";
-        this.roomNumber = 0;
-        this.isRoomOwner = null;
+        this.roomName = 0;
+        this.winAudio = new Audio("../assets/audio/you_won.mp3");
+        this.loseAudio = new Audio("../assets/audio/you_lost_short.mp3");
+        this.winAudio.volume = 0.0;
+        this.loseAudio.volume = 0.0;
         $("#enter").click(() => this.onEnterButtonClicked());
         $("#connect").click(() => this.onConnectButtonClicked());
         $("#close").click(() => this.onCloseButtonClicked());
@@ -297,27 +439,10 @@ class MainScreen {
         $("#name, #room").keypress(() => {
             $("#name, #room").removeClass("required");
         });
-        /** Validate room input */
-        $("#room").on("input", () => {
-            let digitsOnly = $("#room")
-                .val()
-                .replace(/(?![0-9])./, "");
-            $("#room").val(digitsOnly);
-        });
         $("#game-screen").hide();
         $("#main-screen").hide();
         $("#menu-button").hide();
         $("#close").hide();
-    }
-    onCreateButtonClicked() {
-        $("#create-button").prop("disabled", true);
-        $("#connect-to-button").prop("disabled", true);
-        this.socketConnectionManager.send(`{"type":"CREATE", "room":${this.roomNumber},"playerId":"${this.playerId}"}`);
-    }
-    onConnectToRoomButtonClicked() {
-        $("#create-button").prop("disabled", true);
-        $("#connect-to-button").prop("disabled", true);
-        this.socketConnectionManager.send(`{"type":"CONNECT", "room":${this.roomNumber},"playerId":"${this.playerId}"}`);
     }
     onConnectButtonClicked() {
         if (!$("#room").val()) {
@@ -337,10 +462,20 @@ class MainScreen {
         this.closePreviousConnection();
         this.detachPreviousGameBoardController();
         this.viewRoomsList();
-        this.isRoomOwner = null;
-        this.roomNumber = null;
+    }
+    onCreateButtonClicked() {
+        $("#create-button").prop("disabled", true);
+        $("#connect-to-button").prop("disabled", true);
+        this.socketConnectionManager.send(`{"type":"CREATE", "room":${this.roomName},"playerId":"${this.playerId}"}`);
+    }
+    onConnectToRoomButtonClicked() {
+        $("#create-button").prop("disabled", true);
+        $("#connect-to-button").prop("disabled", true);
+        this.socketConnectionManager.send(`{"type":"CONNECT", "room":${this.roomName},"playerId":"${this.playerId}"}`);
     }
     onEnterButtonClicked() {
+        this.winAudio.play();
+        this.loseAudio.play();
         this.viewEnterToMain();
     }
     viewEnterToMain() {
@@ -357,18 +492,16 @@ class MainScreen {
         // Should we detach it?
         this.detachPreviousGameBoardController();
         this.viewStopGame();
-        this.isRoomOwner = null;
-        this.roomNumber = null;
     }
     /**
      * Creates game board controller for the canvas element
      * where the game play is happening.
      *
-     * @param isGameCreator boolean argument based on which playing shape is selected
+     * @param isFirstPlayer boolean argument based on which playing shape is selected
      */
-    createGameBoardController(isGameCreator) {
+    createGameBoardController(isFirstPlayer) {
         this.detachPreviousGameBoardController();
-        this.gameBoardController = new GameBoardController(isGameCreator ? Shape.X : Shape.O);
+        this.gameBoardController = new GameBoardController(isFirstPlayer ? Shape.X : Shape.O);
         let _this = this;
         this.gameBoardController.setCellClickListener((cellIndex) => {
             _this.gameBoardController.enableGameBoard(false);
@@ -380,7 +513,7 @@ class MainScreen {
      * @param cellIndex index from 0 to 8
      */
     onCellSelected(cellIndex) {
-        let msg = `{"type":"TURN","room":${this.roomNumber},
+        let msg = `{"type":"TURN","room":${this.roomName},
               "playerId":"${this.playerId}","cell":${cellIndex}}`;
         this.socketConnectionManager.send(msg);
     }
@@ -401,8 +534,8 @@ class MainScreen {
     inializeConnection() {
         this.playerName = $("#name").val();
         // Auto casting to 'number'?
-        this.roomNumber = $("#room").val();
-        this.connect(this.roomNumber, this.playerName);
+        this.roomName = $("#room").val();
+        this.connect(this.roomName, this.playerName);
     }
     connect(room, username) {
         this.closePreviousConnection();
@@ -411,64 +544,60 @@ class MainScreen {
         this.socketConnectionManager.setMessageListener(event => this.onMessageEvent(event));
     }
     onMessageEvent(messageEvent) {
-        let json = JSON.parse(messageEvent.data);
-        if (this.playerId == null || this.playerId === undefined) {
-            this.playerId = json["playerId"];
-        }
         this.viewPrintToChat(`${messageEvent.data}`);
-        let message = json["message"];
-        if (message == null || message === undefined) {
+        let json = JSON.parse(messageEvent.data);
+        if (json.type == RegisteredReceivedMessage.getType()) {
+            let message = json;
+            this.playerId = message.playerId;
+        }
+        else if (json.type == RoomCreateReceiveMessage.getType()) {
+            this.roomCreated(json);
+        }
+        else if (json.type == GameStartedReceiveMessage.getType()) {
+            this.startGame(json);
+        }
+        else if (json.type == GameEndedReceiveMessage.getType()) {
+            this.endGame(json);
+        }
+        else if (json.type == TurnReceiveMessage.getType()) {
+            this.updateGameBoard(json);
+        }
+        else if (json.type == RoomListReceiveMessage.getType()) {
+            this.updateRoomsList(json);
+        }
+    }
+    // TODO: implement UI for the list of rooms
+    updateRoomsList(arg0) {
+        this.viewPrintToChat(JSON.stringify(arg0));
+    }
+    updateGameBoard(msg) {
+        this.gameBoardController.opponentPlacedShape(msg.cellOccupied.x, msg.cellOccupied.y);
+    }
+    endGame(msg) {
+        if (msg.winnerPlayerId == null || msg.boardState == null) {
+            alert(`Game ended unexpectedly: ${JSON.stringify(msg)}`);
             return;
         }
-        switch (message.toLowerCase()) {
-            case "wait":
-                {
-                    if (this.isRoomOwner == null) {
-                        this.viewStartGame();
-                    }
-                }
-                break;
-            case "turn":
-                {
-                    if (this.isRoomOwner == null) {
-                        this.viewStartGame();
-                    }
-                    let wasUndefined = this.isRoomOwner == null;
-                    if (this.isRoomOwner == null &&
-                        (json.field == undefined || json.field == null)) {
-                        this.isRoomOwner = true;
-                    }
-                    else if (this.isRoomOwner == null || !this.isRoomOwner) {
-                        this.isRoomOwner = false;
-                    }
-                    if (wasUndefined && this.isRoomOwner != null) {
-                        this.createGameBoardController(this.isRoomOwner);
-                    }
-                    this.gameBoardController.enableGameBoard(true);
-                    if (json.field != null && json.field != undefined) {
-                        let boardState = [
-                            [false, false, false],
-                            [false, false, false],
-                            [false, false, false]
-                        ];
-                        for (var i = 0; i < boardState.length; i++) {
-                            for (var j = 0; j < boardState[i].length; j++) {
-                                boardState[i][j] = json.field[3 * i + j] != "EMPTY";
-                            }
-                        }
-                        // for (var i = 0, j = 0; i < json.field.length; i++) {
-                        //   let newI = Math.floor(i / 3);
-                        //   boardState[newI][j] = json.field[i] != "EMPTY";
-                        //   if (newI % 3 == 2) {
-                        //     j++;
-                        //   }
-                        // }
-                        this.gameBoardController.updateBoardState(boardState);
-                    }
-                    //this.gameBoardController.opponentPlacedShapeInCell(x,y);
-                }
-                break;
+        let didPlayerWinner = msg.winnerPlayerId == this.playerId;
+        if (didPlayerWinner) {
+            this.winAudio.volume = 1;
+            this.winAudio.play();
         }
+        else {
+            this.loseAudio.volume = 1;
+            this.loseAudio.play();
+        }
+        this.gameBoardController.endGame(didPlayerWinner, msg.boardState);
+        this.roomId = null;
+        this.roomName = null;
+        this.detachPreviousGameBoardController();
+    }
+    roomCreated(msg) {
+        this.roomId = msg.roomId;
+    }
+    startGame(msg) {
+        this.viewStartGame();
+        this.createGameBoardController(msg.firstPlayerId == this.playerId);
     }
     viewStartGame() {
         $("#main-screen").hide();
