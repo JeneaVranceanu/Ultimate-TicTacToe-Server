@@ -15,36 +15,20 @@ enum Shape {
  * CONTROLLER IS WAITING TO BE ACTIVATED WHEN THE GAME STARTS.
  */
 class GameBoardController {
-  public updateBoardState(boardState: boolean[][]) {
-    // Coordinates of changed cell
-    let x = 0,
-      y = 0;
-    for (let i = 0; i < boardState.length; i++) {
-      for (let j = 0; j < boardState[i].length; j++) {
-        if (this.boardCellsStatus[i][j] != boardState[i][j]) {
-          y = i;
-          x = j;
 
-          this.opponentPlacedShape(x, y);
-
-          return;
-        }
-      }
-    }
-  }
   private canvas: HTMLCanvasElement;
   private context: CanvasRenderingContext2D;
 
   private rowHeight: number;
   private columnWidth: number;
 
-  // false - cell is empty
-  // true - cell is occupied
-  // if (boardCellsStatus[1][1]) { cell is occupied. must not allow drawing here. }
+  // null - cell is empty
+  // Shape.X || Shape.O - cell is occupied
+  // if (boardCellsStatus[1][1] != null) { cell is occupied. must not allow drawing here. }
   private boardCellsStatus = [
-    [false, false, false],
-    [false, false, false],
-    [false, false, false]
+    [null, null, null],
+    [null, null, null],
+    [null, null, null]
   ];
 
   private playerClickedSounds = [
@@ -82,6 +66,80 @@ class GameBoardController {
     this.rowHeight = this.canvas.height / 3;
     this.columnWidth = this.canvas.width / 3;
   }
+  
+  public endGame(didPlayerWin: boolean, gameStory: Turn[]) {
+    let interestedShape = didPlayerWin ? this.playerShape : (this.playerShape == Shape.X ? Shape.O : Shape.X);
+    let interestedShapeString = interestedShape == Shape.O ? "O" : "X";
+    let filteredStory = gameStory.filter((value: Turn) => {
+       return value.shape.toUpperCase() == interestedShapeString;
+    })
+
+    let winnerPath = new Array<Turn>();
+    // The last element of filtered game story
+    // is automatically part of the winner path
+    winnerPath[0] = filteredStory.pop();
+    filteredStory = filteredStory.sort((a: Turn, b: Turn) => {
+      if (a.y == b.y) {
+        return a.x - b.x;
+      }
+      return a.y > b.y ? 1 : -1;
+    });
+
+    let currentTurn = winnerPath[0];
+    //Not the most efficient way to find a path
+    for (let i = 0; i < filteredStory.length && winnerPath.length < 3; i++) {
+      let nextTurn = filteredStory[i];
+			let isOnTheSameLine = [nextTurn.x - 1, nextTurn.x + 1].includes(currentTurn.x);
+			let isOnTheSameColumn = [nextTurn.y - 1, nextTurn.y + 1].includes(currentTurn.y);
+    	if (isOnTheSameLine || isOnTheSameColumn || this.areTurnsOnTheSameDiagonal(nextTurn, currentTurn)) {
+        winnerPath.push(nextTurn);
+        currentTurn = nextTurn;
+      }
+    }
+
+
+    let image = new Image();
+    image.src = didPlayerWin ? "../assets/gold_crown.png" : "../assets/crossed_swords.png";
+    if (this.isImageLoaded(image)) {
+      winnerPath.forEach((value) => this.drawImage(image, value.x, value.y));
+    } else {
+      this.triggerLoadingOfImageIfNotLoaded(image);
+      image.onload = () => winnerPath.forEach((value) => this.drawImage(image, value.x, value.y));
+    }
+  }
+
+  private isImageLoaded(image: HTMLImageElement): boolean {
+    return image.complete && image.naturalHeight != 0;
+  }
+
+  private triggerLoadingOfImageIfNotLoaded(image: HTMLImageElement) {
+    this.context.save();
+    this.context.drawImage(image, 0, 0, image.width, image.height);
+    this.context.restore();
+  }
+
+  private areTurnsOnTheSameDiagonal(pivot: Turn, nextPoint: Turn): boolean {
+    let nonDiagonalPoints = [0,2]
+  
+    let isNextPointOnDiagonal = !(nextPoint.x == 1 && nonDiagonalPoints.includes(nextPoint.y) 
+    || nonDiagonalPoints.includes(nextPoint.x) && nextPoint.y == 1);
+  
+    if (!isNextPointOnDiagonal) {
+      return false;
+    }
+  
+    if (pivot.x == 1 && pivot.y == 1) {
+      // Pivot is in the middle. And nextPoint is also in the middle.
+      return true;
+    } else if (pivot.x == 1 && nonDiagonalPoints.includes(pivot.y) 
+    || nonDiagonalPoints.includes(pivot.x) && pivot.y == 1) {
+      // Pivot is not on the diagonal
+      return false;
+    } else {
+      //Pivot is somewhere in the corner.
+      return nextPoint.x != pivot.x || nextPoint.y != pivot.y;
+    }
+  }
 
   public detach() {
     this.setUserEventsEnabled(false);
@@ -96,17 +154,22 @@ class GameBoardController {
   // @ts-ignore
   private drawPlayedShape(shape: Shape, xPosition: number, yPosition: number) {
     let image = shape == Shape.X ? this.markX : this.markO;
-    image.onload = null;
-    if (!image.complete || image.naturalHeight == 0) {
-      image.onload = () => this.drawPlayedShape(shape, xPosition, yPosition);
-      return;
-    }
-
+  
     if (this.isCellOccupied(xPosition, yPosition)) {
       return;
     }
-    console.log("drawPlayedShape " + shape);
-    this.setCellOccupied(xPosition, yPosition);
+
+    this.setCellOccupied(xPosition, yPosition, shape);
+
+    this.drawImage(image, xPosition, yPosition);
+  }
+  
+  private drawImage(image: HTMLImageElement, xPosition: number, yPosition: number) {
+    image.onload = null;
+    if (!this.isImageLoaded(image)) {
+      image.onload = () => this.drawImage(image, xPosition, yPosition);
+      return;
+    }
 
     this.context.save();
     let y =
@@ -121,8 +184,8 @@ class GameBoardController {
     this.context.restore();
   }
 
-  private setCellOccupied(xPosition: number, yPosition: number) {
-    this.boardCellsStatus[yPosition][xPosition] = true;
+  private setCellOccupied(xPosition: number, yPosition: number, shape: Shape) {
+    this.boardCellsStatus[yPosition][xPosition] = shape;
   }
   /**
    *
@@ -130,7 +193,7 @@ class GameBoardController {
    * @param yPosition vertical postition of a cell [0,2]
    */
   private isCellOccupied(xPosition: number, yPosition: number): boolean {
-    return this.boardCellsStatus[yPosition][xPosition];
+    return this.boardCellsStatus[yPosition][xPosition] != null;
   }
 
   public enableGameBoard(enable: boolean) {
