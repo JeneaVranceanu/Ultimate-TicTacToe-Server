@@ -138,11 +138,11 @@ public class Message {
         }
 
         if (boardState != null) {
-            json.add("boardState", boardState.toString());
+            json.add("boardState", boardState.toJson());
         }
 
         if (cellOccupied != null) {
-            json.add("cellOccupied", cellOccupied.toString());
+            json.add("cellOccupied", cellOccupied.toJson());
         }
 
         if (rooms != null) {

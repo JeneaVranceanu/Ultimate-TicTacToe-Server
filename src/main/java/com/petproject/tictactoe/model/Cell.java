@@ -1,6 +1,7 @@
 package com.petproject.tictactoe.model;
 
 import javax.json.Json;
+import javax.json.JsonObject;
 
 public class Cell {
 
@@ -45,6 +46,14 @@ public class Cell {
             .add("y", y)
             .add("shape", shape.getShapeName())
             .build().toString();
+    }
+
+    public JsonObject toJson() {
+        return Json.createObjectBuilder()
+            .add("x", x)
+            .add("y", y)
+            .add("shape", shape.getShapeName())
+            .build();
     }
 
     @Override
