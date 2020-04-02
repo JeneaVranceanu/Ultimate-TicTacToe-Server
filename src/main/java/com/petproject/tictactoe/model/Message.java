@@ -1,16 +1,23 @@
 package com.petproject.tictactoe.model;
 
+import java.util.List;
+
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 
 public class Message {
 
     private MessageType type;
     private String playerId;
-    private Integer room;
-    private Integer cell;
-    private String message;
-    private Field field;
+    private String firstPlayerId;
+    private String secondPlayerId;
+    private String winnerPlayerId;
+    private Long roomId;
+    private String roomName;
+    private Field boardState;
+    private Cell cellOccupied;
+    private List<Room> rooms;
 
     public void setType(MessageType type) {
         this.type = type;
@@ -28,42 +35,84 @@ public class Message {
         return playerId;
     }
 
-    public void setRoom(int room) {
-        this.room = room;
+    public void setFirstPlayerId(String firstPlayerId) {
+        this.firstPlayerId = firstPlayerId;
     }
 
-    public int getRoom() {
-        return room;
+    public String getFirstPlayerId() {
+        return firstPlayerId;
     }
 
-    public void setCell(int cell) {
-        this.cell = cell;
+    public void setSecondPlayerId(String secondPlayerId) {
+        this.secondPlayerId = secondPlayerId;
     }
 
-    public int getCell() {
-        return cell;
+    public String getSecondPlayerId() {
+        return secondPlayerId;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setWinnerPlayerId(String winnerPlayerId) {
+        this.winnerPlayerId = winnerPlayerId;
     }
 
-    public String getMessage() {
-        return message;
+    public String getWinnerPlayerId() {
+        return winnerPlayerId;
     }
 
-    public void setField(Field field) {
-        this.field = field;
+    public void setRoomId(long roomId) {
+        this.roomId = roomId;
     }
 
-    public Field getField() {
-        return field;
+    public long getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
+    }
+
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public void setBoardState(Field boardState) {
+        this.boardState = boardState;
+    }
+
+    public Field getBoardState() {
+        return boardState;
+    }
+
+    public void setCellOccupied(Cell cellOccupied) {
+        this.cellOccupied = cellOccupied;
+    }
+
+    public Cell getCellOccupied() {
+        return cellOccupied;
+    }
+
+    public List<Room> getRooms() {
+        return rooms;
+    }
+
+    public void setRooms(List<Room> rooms) {
+        this.rooms = rooms;
+    }
+
+    public String getStringRoomArray() {
+        JsonArrayBuilder json = Json.createArrayBuilder();
+        rooms.forEach(r -> json.add(r.toString()));
+        return json.build().toString();
+    }
+
+    public void setRoomArray(List<Room> rooms) {
+        this.rooms = rooms;
     }
 
     @Override
     public String toString() {
         JsonObjectBuilder json = Json.createObjectBuilder();
-        
+
         if (type != null) {
             json.add("type", type.getMessageType());
         }
@@ -71,21 +120,33 @@ public class Message {
         if (playerId != null) {
             json.add("playerId", playerId);
         }
-
-        if (room != null) {
-            json.add("room", room);
+        
+        if (firstPlayerId != null) {
+            json.add("firstPlayerId", firstPlayerId);
         }
 
-        if (message != null) {
-            json.add("message", message);
+        if (secondPlayerId != null) {
+            json.add("secondPlayerId", secondPlayerId);
         }
 
-        if (cell != null) {
-            json.add("cell", cell);
+        if (roomId != null) {
+            json.add("roomId", roomId);
         }
 
-        if (field != null) {
-            json.add("field", field.toString());
+        if (roomName != null) {
+            json.add("roomName", roomName);
+        }
+
+        if (boardState != null) {
+            json.add("boardState", boardState.toString());
+        }
+
+        if (cellOccupied != null) {
+            json.add("cellOccupied", cellOccupied.toString());
+        }
+
+        if (rooms != null) {
+            json.add("rooms", getStringRoomArray());
         }
 
         return json.build().toString();
@@ -93,7 +154,10 @@ public class Message {
 
     public enum MessageType {
 
-        ON_OPEN("ON_OPEN"), CREATE("CREATE"), CONNECT("CONNECT"), TURN("TURN"), CLOSE("CLOSE");
+        REGISTERED("REGISTERED"), ROOM_CREATE("ROOM_CREATE"), 
+        ROOM_CLOSE("ROOM_CLOSE"), ROOM_CONNECT("ROOM_CONNECT"),
+        GAME_START("GAME_START"), GAME_END("GAME_END"),
+        TURN("TURN"), ROOM_LIST("ROOM_LIST");
 
         private String messageType;
 
@@ -103,22 +167,6 @@ public class Message {
 
         public String getMessageType() {
             return messageType;
-        }
-
-    }
-
-    public enum MessageAction {
-
-        WAIT("WAIT"), TURN("TURN");
-
-        private String action;
-
-        MessageAction(String action) {
-            this.action = action;
-        }
-
-        public String getMessageAction() {
-            return action;
         }
 
     }
