@@ -2,18 +2,19 @@ package com.petproject.tictactoe.model;
 
 import java.util.UUID;
 
+import javax.json.Json;
 import javax.websocket.Session;
 
 public class Player {
 
     private Session session;
-    private Mark mark;
+    private Shape shape;
     private String name;
     private String id;
 
-    public Player(String name, Mark mark, Session session) {
+    public Player(String name, Shape shape, Session session) {
         this.name = name;
-        this.mark = mark;
+        this.shape = shape;
         this.session = session;
         this.id = UUID.randomUUID().toString();
     }
@@ -26,12 +27,12 @@ public class Player {
         return name;
     }
 
-    public Mark getMark() {
-        return mark;
+    public Shape getShape() {
+        return shape;
     }
 
-    public void setMark(Mark mark) {
-        this.mark = mark;
+    public void setShape(Shape shape) {
+        this.shape = shape;
     }
 
     public Session getSession() {
@@ -40,7 +41,27 @@ public class Player {
 
     @Override
     public String toString() {
-        return String.format("Name: %s, ID: %s, Mark: %s", name, id, mark.getMarkName());
+        return Json.createObjectBuilder()
+            .add("sessionId", session.getId())
+            .add("shape", shape.getShapeName())
+            .add("name", name)
+            .add("id", id)
+            .build().toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Player player = (Player) o;
+        return session.getId().equals(player.session.getId()) &&
+                shape.equals(player.getShape()) &&
+                name.equals(player.name) &&
+                id.equals(player.id);
     }
     
 }
