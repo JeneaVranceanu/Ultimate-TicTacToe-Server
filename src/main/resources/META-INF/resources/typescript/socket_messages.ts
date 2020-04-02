@@ -13,6 +13,11 @@ class RoomCreateEmitMessage {
     private type = "ROOM_CREATE";
     public playerId: string;
     public roomName: string;
+
+    constructor(playerId: string, roomName: string) {
+        this.playerId = playerId;
+        this.roomName = roomName;
+    }
     
 }
 
@@ -34,6 +39,11 @@ class RoomCloseEmitMessage {
     private type = "ROOM_CLOSE";
     public playerId: string;
     public roomId: number;
+
+    constructor(playerId: string, roomId: number) {
+        this.playerId = playerId;
+        this.roomId = roomId;
+    }
 }
 
 /**
@@ -44,6 +54,11 @@ class RoomConnectEmitMessage {
     private type = "ROOM_CONNECT";
     public playerId: string;
     public roomId: number;
+
+    constructor(playerId: string, roomId: number) {
+        this.playerId = playerId;
+        this.roomId = roomId;
+    }
 }
 
 /**
@@ -78,10 +93,11 @@ class Turn {
     public x: number;
     public y: number; 
     public shape: string;
-    constructor(xx: number, yy: number, ss: string) {
-    this.x = xx;
-    this.y = yy;
-this.shape = ss;
+
+    constructor(x: number, y: number, shape: string) {
+        this.x = x;
+        this.y = y;
+        this.shape = shape;
     }
 }
 
@@ -90,10 +106,16 @@ this.shape = ss;
  * Identifies occupied cell and by whom it was occupied.
  */
 class TurnEmitMessage {
-    public static getType() { return "TURN"; }
+    private type = "TURN";
     public roomId: number;
     public playerId: string;
-    public cellOccupied: Turn;    
+    public cellOccupied: Turn;   
+    
+    constructor(playerId: string, roomId: number, cellOccupied: Turn) {
+        this.playerId = playerId;
+        this.roomId = roomId;
+        this.cellOccupied = cellOccupied;
+    }
 }
     
 /**

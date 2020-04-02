@@ -6,8 +6,8 @@ class MainScreen {
 
   // Assigned by the user before connecting to the serve
   private playerName: string = "";
-  private roomName: number = 0;
-  private roomId: number;
+  private roomName: string = "";
+  private roomId: number = 0;
 
   private winAudio = new Audio("../assets/audio/you_won.mp3");
   private loseAudio = new Audio("../assets/audio/you_lost_short.mp3");
@@ -20,7 +20,6 @@ class MainScreen {
     this.loseAudio.volume = 0.0;
 
     $("#enter").click(() => this.onEnterButtonClicked());
-    $("#connect").click(() => this.onConnectButtonClicked());
     $("#close").click(() => this.onCloseButtonClicked());
     $("#menu-button").click(() => this.onMenuButtonClicked());
     $("#create-button").click(() => this.onCreateButtonClicked());
@@ -34,51 +33,66 @@ class MainScreen {
       $("#name, #room").removeClass("required");
     });
 
+    $("#room").on("input", () => (this.roomName = $("#room").val()));
+
     $("#game-screen").hide();
     $("#main-screen").hide();
     $("#menu-button").hide();
     $("#close").hide();
   }
 
-  private onConnectButtonClicked() {
-    if (!$("#room").val()) {
-      $("#room").addClass("required");
-    } else {
-      $("#connect").hide();
-      $("#close").show();
-      $("#create-button").show();
-      $("#create-button").prop("disabled", false);
-      $("#connect-to-button").show();
-      $("#connect-to-button").prop("disabled", false);
-      this.inializeConnection();
-    }
-  }
+  // private onConnectButtonClicked() {
+  // if (!$("#room").val()) {
+  //   $("#room").addClass("required");
+  // } else {
+  //     $("#connect").hide();
+  //     $("#close").show();
+  //     $("#create-button").show();
+  //     $("#connect-to-button").show();
+  //     $("#connect-to-button").prop("disabled", false);
+  //     this.inializeConnection();
+  //   }
+  // }
 
   private onCloseButtonClicked() {
     this.closePreviousConnection();
     this.detachPreviousGameBoardController();
     this.viewRoomsList();
   }
-  
+
   private onCreateButtonClicked() {
-    $("#create-button").prop("disabled", true);
-    $("#connect-to-button").prop("disabled", true);
-    this.socketConnectionManager.send(
-      `{"type":"CREATE", "room":${this.roomName},"playerId":"${this.playerId}"}`
-    );
+    if (!$("#room").val()) {
+      $("#room").addClass("required");
+    } else {
+      let message = JSON.stringify(
+        new RoomCreateEmitMessage(this.playerId, this.roomName)
+      );
+      this.socketConnectionManager.send(message);
+    }
   }
 
   private onConnectToRoomButtonClicked() {
-    $("#create-button").prop("disabled", true);
-    $("#connect-to-button").prop("disabled", true);
-    this.socketConnectionManager.send(
-      `{"type":"CONNECT", "room":${this.roomName},"playerId":"${this.playerId}"}`
+    let message = JSON.stringify(
+      new RoomConnectEmitMessage(this.playerId, this.roomId)
     );
+    this.socketConnectionManager.send(message);
   }
 
   private onEnterButtonClicked() {
-    this.winAudio.play();
-    this.loseAudio.play();
+    // this.winAudio.play();
+    // this.loseAudio.play();
+    let allSounds = [
+      ...GameBoardController.playerClickedSounds,
+      ...GameBoardController.opponentClickedSounds,
+      this.loseAudio,
+      this.winAudio
+    ];
+    allSounds.forEach(value => {
+      value.volume = 0.0;
+      value.play();
+    });
+
+    this.inializeConnection();
     this.viewEnterToMain();
   }
 
@@ -89,6 +103,11 @@ class MainScreen {
       $("#name-label").text(`Player: ${$("#name").val()}`);
       $("#start-screen").hide();
       $("#main-screen").show();
+
+      $("#close").show();
+      $("#create-button").show();
+      $("#connect-to-button").show();
+      $("#connect-to-button").prop("disabled", false);
     }
   }
 
@@ -111,19 +130,17 @@ class MainScreen {
     );
 
     let _this = this;
-    this.gameBoardController.setCellClickListener((cellIndex: number) => {
+    this.gameBoardController.setCellClickListener((cellOccupied: Turn) => {
       _this.gameBoardController.enableGameBoard(false);
-      _this.onCellSelected(cellIndex);
+      _this.onCellSelected(cellOccupied);
     });
   }
-  /**
-   * Invoked when
-   * @param cellIndex index from 0 to 8
-   */
-  private onCellSelected(cellIndex: number) {
-    let msg = `{"type":"TURN","room":${this.roomName},
-              "playerId":"${this.playerId}","cell":${cellIndex}}`;
-    this.socketConnectionManager.send(msg);
+
+  private onCellSelected(cellOccupied: Turn) {
+    let message = JSON.stringify(
+      new TurnEmitMessage(this.playerId, this.roomId, cellOccupied)
+    );
+    this.socketConnectionManager.send(message);
   }
 
   /**
@@ -146,16 +163,14 @@ class MainScreen {
    */
   private inializeConnection() {
     this.playerName = $("#name").val();
-    // Auto casting to 'number'?
-    this.roomName = $("#room").val();
-    this.connect(this.roomName, this.playerName);
+    this.connect(this.playerName);
   }
 
-  private connect(room: number, username: string) {
+  private connect(username: string) {
     this.closePreviousConnection();
 
     this.socketConnectionManager = new SocketConnectionManager();
-    this.socketConnectionManager.connect(room.toString(), username);
+    this.socketConnectionManager.connect(username);
     this.socketConnectionManager.setMessageListener(event =>
       this.onMessageEvent(event)
     );
@@ -169,6 +184,7 @@ class MainScreen {
     if (json.type == RegisteredReceivedMessage.getType()) {
       let message = json as RegisteredReceivedMessage;
       this.playerId = message.playerId;
+      this.requestRoomsList();
     } else if (json.type == RoomCreateReceiveMessage.getType()) {
       this.roomCreated(json as RoomCreateReceiveMessage);
     } else if (json.type == GameStartedReceiveMessage.getType()) {
@@ -182,19 +198,28 @@ class MainScreen {
     }
   }
 
+  private requestRoomsList() {
+    let message = JSON.stringify(new RoomListEmitMessage());
+    console.log("let message = JSON.stringify(new RoomListEmitMessage());")
+    this.socketConnectionManager.send(message);
+  }
+
   // TODO: implement UI for the list of rooms
   private updateRoomsList(arg0: RoomListReceiveMessage) {
     this.viewPrintToChat(JSON.stringify(arg0));
   }
 
   private updateGameBoard(msg: TurnReceiveMessage) {
-    this.gameBoardController.opponentPlacedShape(msg.cellOccupied.x, msg.cellOccupied.y);
+    this.gameBoardController.opponentPlacedShape(
+      msg.cellOccupied.x,
+      msg.cellOccupied.y
+    );
   }
 
   private endGame(msg: GameEndedReceiveMessage) {
     if (msg.winnerPlayerId == null || msg.boardState == null) {
       alert(`Game ended unexpectedly: ${JSON.stringify(msg)}`);
-      return;
+      return; 
     }
 
     let didPlayerWinner = msg.winnerPlayerId == this.playerId;
@@ -220,7 +245,9 @@ class MainScreen {
 
   private startGame(msg: GameStartedReceiveMessage) {
     this.viewStartGame();
-    this.createGameBoardController(msg.firstPlayerId == this.playerId);
+    let isPlayersTurn = msg.firstPlayerId == this.playerId;
+    this.createGameBoardController(isPlayersTurn);
+    this.gameBoardController.enableGameBoard(isPlayersTurn);
   }
 
   private viewStartGame() {
