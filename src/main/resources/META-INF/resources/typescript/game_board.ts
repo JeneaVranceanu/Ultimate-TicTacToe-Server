@@ -1,6 +1,6 @@
 enum Shape {
-  X = 1,
-  O
+  X = "X",
+  O = "O"
 }
 
 /**
@@ -25,17 +25,17 @@ class GameBoardController {
   // null - cell is empty
   // Shape.X || Shape.O - cell is occupied
   // if (boardCellsStatus[1][1] != null) { cell is occupied. must not allow drawing here. }
-  private boardCellsStatus = [
+  private boardCellsStatus: Array<Array<Shape | null>> = [
     [null, null, null],
     [null, null, null],
     [null, null, null]
   ];
 
-  private playerClickedSounds = [
+  public static playerClickedSounds = [
     new Audio("../assets/audio/balloon_snap.mp3"),
     new Audio("../assets/audio/player_move.mp3")
   ];
-  private opponentClickedSounds = [
+  public static opponentClickedSounds = [
     new Audio("../assets/audio/opponent_move_2.mp3"),
     new Audio("../assets/audio/opponent_move.mp3")
   ];
@@ -43,18 +43,9 @@ class GameBoardController {
   private markO = new Image();
   private markX = new Image();
   private playerShape: Shape;
-  private cellClickListener: (index: number) => any = null;
+  private cellClickListener: (cellOccupied: Turn) => any = null;
 
   constructor(playerShape: Shape) {
-    let allSounds = [
-      ...this.playerClickedSounds,
-      ...this.opponentClickedSounds
-    ];
-    allSounds.forEach(value => {
-      value.volume = 0.0;
-      value.play();
-    });
-
     this.playerShape = playerShape;
     this.markO.src = "../assets/o_mark_95.png";
     this.markX.src = "../assets/x_mark_95.png";
@@ -96,7 +87,6 @@ class GameBoardController {
         currentTurn = nextTurn;
       }
     }
-
 
     let image = new Image();
     image.src = didPlayerWin ? "../assets/gold_crown.png" : "../assets/crossed_swords.png";
@@ -202,7 +192,7 @@ class GameBoardController {
     // to let the user know about the board state
   }
 
-  public setCellClickListener(listner: (index: number) => any) {
+  public setCellClickListener(listner: (cellOccupied: Turn) => any) {
     this.cellClickListener = listner;
   }
 
@@ -237,24 +227,16 @@ class GameBoardController {
       cellYIndex = 2;
     }
 
-    let cellNumber = this.twoDimensionalIndicesToOneDimenstion(
-      cellXIndex,
-      cellYIndex
-    );
     if (
       this.cellClickListener != null &&
       !this.isCellOccupied(cellXIndex, cellYIndex)
     ) {
-      this.cellClickListener(cellNumber);
+      this.cellClickListener(new Turn(cellXIndex, cellYIndex, this.playerShape));
     }
 
-    this.makeASound(this.playerClickedSounds);
+    this.makeASound(GameBoardController.playerClickedSounds);
 
     this.drawPlayedShape(this.playerShape, cellXIndex, cellYIndex);
-  }
-
-  private twoDimensionalIndicesToOneDimenstion(x: number, y: number): number {
-    return 3 * y + x;
   }
 
   /**
@@ -271,56 +253,22 @@ class GameBoardController {
     //new Audio(sounds[Math.floor(Math.random() * 100) % sounds.length]).play();
   }
 
-  /**
-   * Places a shape on a board according to opponent's move.
-   * @param cellNumber a number from set [0,8]
-   */
-  public opponentPlacedShapeInCell(cellNumber: number) {
-    if (cellNumber > 8 || cellNumber < 0) {
-      console.log(
-        `Cell number is invalid: opponentPlacedShapeInCell(cellNumber: ${cellNumber})`
-      );
-      return;
-    }
-
-    let x = Math.max(0, cellNumber);
-    let y = 0;
-
-    if (cellNumber > 2 || cellNumber <= 5) {
-      x = cellNumber - 3;
-      y = 1;
-    } else if (cellNumber > 5) {
-      x = cellNumber - 6;
-      y = 2;
-    }
-
-    if (this.isCellOccupied(x, y)) {
-      return;
-    }
-
-    this.makeASound(this.opponentClickedSounds);
-    this.drawPlayedShape(this.getOpponentsShape(), x, y);
-  }
-
   public opponentPlacedShape(x: number, y: number) {
-    console.log("x > 2 || x < 0 || y < 0 || y > 2");
     if (x > 2 || x < 0 || y < 0 || y > 2) {
       console.log(
-        `Cell number is invalid: opponentPlacedShapeInCell(x: ${x}, y: ${y})`
+        `Cell number is invalid: opponentPlacedShape(x: ${x}, y: ${y})`
       );
       return;
     }
 
-    console.log("this.isCellOccupied(x, y)");
     if (this.isCellOccupied(x, y)) {
       return;
     }
 
-    console.log("this.makeASound(this.opponentClickedSounds);");
     try {
-      this.makeASound(this.opponentClickedSounds);
+      this.makeASound(GameBoardController.opponentClickedSounds);
     } catch {
-      // No sound :O
+      // No sound :O     sad :(
     }
     this.drawPlayedShape(this.getOpponentsShape(), x, y);
   }

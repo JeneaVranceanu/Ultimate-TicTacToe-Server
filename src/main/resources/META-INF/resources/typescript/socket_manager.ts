@@ -7,12 +7,11 @@ class SocketConnectionManager {
     }
 
     /** Interfaces */
-    public connect(room: string, name: string) {
+    public connect(name: string) {
         if (!this.connected) {
             console.log('Init ws connection');
-            console.log("Room#: " + room);
             console.log("Name: " + name);
-            var param = `${room}&${name}`;
+            var param = `${name}`;
             this.socket = new WebSocket(`ws://${location.hostname}:8080/chat/${param}`);
 
             this.socket.onopen = () => {
@@ -47,6 +46,7 @@ class SocketConnectionManager {
     }
 
     public send(message: string) {
+        console.log(`Send message: ${message}`);
         if (this.connected) {
             this.socket.send(message);
         }

@@ -1,7 +1,7 @@
 var Shape;
 (function (Shape) {
-    Shape[Shape["X"] = 1] = "X";
-    Shape[Shape["O"] = 2] = "O";
+    Shape["X"] = "X";
+    Shape["O"] = "O";
 })(Shape || (Shape = {}));
 /**
  * <p>GameBoardController class is responsible for drawing a game board,
@@ -24,14 +24,6 @@ class GameBoardController {
             [null, null, null],
             [null, null, null]
         ];
-        this.playerClickedSounds = [
-            new Audio("../assets/audio/balloon_snap.mp3"),
-            new Audio("../assets/audio/player_move.mp3")
-        ];
-        this.opponentClickedSounds = [
-            new Audio("../assets/audio/opponent_move_2.mp3"),
-            new Audio("../assets/audio/opponent_move.mp3")
-        ];
         this.markO = new Image();
         this.markX = new Image();
         this.cellClickListener = null;
@@ -46,14 +38,6 @@ class GameBoardController {
             mouseY -= this.canvas.offsetTop;
             this.boardClicked(mouseX, mouseY);
         };
-        let allSounds = [
-            ...this.playerClickedSounds,
-            ...this.opponentClickedSounds
-        ];
-        allSounds.forEach(value => {
-            value.volume = 0.0;
-            value.play();
-        });
         this.playerShape = playerShape;
         this.markO.src = "../assets/o_mark_95.png";
         this.markX.src = "../assets/x_mark_95.png";
@@ -210,16 +194,12 @@ class GameBoardController {
         else if (y > this.rowHeight * 2) {
             cellYIndex = 2;
         }
-        let cellNumber = this.twoDimensionalIndicesToOneDimenstion(cellXIndex, cellYIndex);
         if (this.cellClickListener != null &&
             !this.isCellOccupied(cellXIndex, cellYIndex)) {
-            this.cellClickListener(cellNumber);
+            this.cellClickListener(new Turn(cellXIndex, cellYIndex, this.playerShape));
         }
-        this.makeASound(this.playerClickedSounds);
+        this.makeASound(GameBoardController.playerClickedSounds);
         this.drawPlayedShape(this.playerShape, cellXIndex, cellYIndex);
-    }
-    twoDimensionalIndicesToOneDimenstion(x, y) {
-        return 3 * y + x;
     }
     /**
      * Picks random assets from a list and plays it
@@ -234,47 +214,19 @@ class GameBoardController {
         audio.play();
         //new Audio(sounds[Math.floor(Math.random() * 100) % sounds.length]).play();
     }
-    /**
-     * Places a shape on a board according to opponent's move.
-     * @param cellNumber a number from set [0,8]
-     */
-    opponentPlacedShapeInCell(cellNumber) {
-        if (cellNumber > 8 || cellNumber < 0) {
-            console.log(`Cell number is invalid: opponentPlacedShapeInCell(cellNumber: ${cellNumber})`);
-            return;
-        }
-        let x = Math.max(0, cellNumber);
-        let y = 0;
-        if (cellNumber > 2 || cellNumber <= 5) {
-            x = cellNumber - 3;
-            y = 1;
-        }
-        else if (cellNumber > 5) {
-            x = cellNumber - 6;
-            y = 2;
-        }
-        if (this.isCellOccupied(x, y)) {
-            return;
-        }
-        this.makeASound(this.opponentClickedSounds);
-        this.drawPlayedShape(this.getOpponentsShape(), x, y);
-    }
     opponentPlacedShape(x, y) {
-        console.log("x > 2 || x < 0 || y < 0 || y > 2");
         if (x > 2 || x < 0 || y < 0 || y > 2) {
-            console.log(`Cell number is invalid: opponentPlacedShapeInCell(x: ${x}, y: ${y})`);
+            console.log(`Cell number is invalid: opponentPlacedShape(x: ${x}, y: ${y})`);
             return;
         }
-        console.log("this.isCellOccupied(x, y)");
         if (this.isCellOccupied(x, y)) {
             return;
         }
-        console.log("this.makeASound(this.opponentClickedSounds);");
         try {
-            this.makeASound(this.opponentClickedSounds);
+            this.makeASound(GameBoardController.opponentClickedSounds);
         }
         catch (_a) {
-            // No sound :O
+            // No sound :O     sad :(
         }
         this.drawPlayedShape(this.getOpponentsShape(), x, y);
     }
@@ -282,17 +234,24 @@ class GameBoardController {
         return this.playerShape == Shape.O ? Shape.X : Shape.O;
     }
 }
+GameBoardController.playerClickedSounds = [
+    new Audio("../assets/audio/balloon_snap.mp3"),
+    new Audio("../assets/audio/player_move.mp3")
+];
+GameBoardController.opponentClickedSounds = [
+    new Audio("../assets/audio/opponent_move_2.mp3"),
+    new Audio("../assets/audio/opponent_move.mp3")
+];
 class SocketConnectionManager {
     constructor() {
         this.connected = false;
     }
     /** Interfaces */
-    connect(room, name) {
+    connect(name) {
         if (!this.connected) {
             console.log('Init ws connection');
-            console.log("Room#: " + room);
             console.log("Name: " + name);
-            var param = `${room}&${name}`;
+            var param = `${name}`;
             this.socket = new WebSocket(`ws://${location.hostname}:8080/chat/${param}`);
             this.socket.onopen = () => {
                 this.connected = true;
@@ -322,6 +281,7 @@ class SocketConnectionManager {
         }
     }
     send(message) {
+        console.log(`Send message: ${message}`);
         if (this.connected) {
             this.socket.send(message);
         }
@@ -337,8 +297,10 @@ class RegisteredReceivedMessage {
  * Emits a request to open a room with given name.
  */
 class RoomCreateEmitMessage {
-    constructor() {
+    constructor(playerId, roomName) {
         this.type = "ROOM_CREATE";
+        this.playerId = playerId;
+        this.roomName = roomName;
     }
 }
 /**
@@ -353,8 +315,10 @@ class RoomCreateReceiveMessage {
  * Impossible if the game started - interpreted as leaving/losing.
  */
 class RoomCloseEmitMessage {
-    constructor() {
+    constructor(playerId, roomId) {
         this.type = "ROOM_CLOSE";
+        this.playerId = playerId;
+        this.roomId = roomId;
     }
 }
 /**
@@ -362,8 +326,10 @@ class RoomCloseEmitMessage {
  * Now waiting for GAME_START.
  */
 class RoomConnectEmitMessage {
-    constructor() {
+    constructor(playerId, roomId) {
         this.type = "ROOM_CONNECT";
+        this.playerId = playerId;
+        this.roomId = roomId;
     }
 }
 /**
@@ -386,10 +352,10 @@ class TurnReceiveMessage {
     static getType() { return "TURN"; }
 }
 class Turn {
-    constructor(xx, yy, ss) {
-        this.x = xx;
-        this.y = yy;
-        this.shape = ss;
+    constructor(x, y, shape) {
+        this.x = x;
+        this.y = y;
+        this.shape = shape;
     }
 }
 /**
@@ -397,7 +363,12 @@ class Turn {
  * Identifies occupied cell and by whom it was occupied.
  */
 class TurnEmitMessage {
-    static getType() { return "TURN"; }
+    constructor(playerId, roomId, cellOccupied) {
+        this.type = "TURN";
+        this.playerId = playerId;
+        this.roomId = roomId;
+        this.cellOccupied = cellOccupied;
+    }
 }
 /**
  * Emits a message requesting list of all rooms
@@ -422,13 +393,13 @@ class MainScreen {
     constructor() {
         // Assigned by the user before connecting to the serve
         this.playerName = "";
-        this.roomName = 0;
+        this.roomName = "";
+        this.roomId = 0;
         this.winAudio = new Audio("../assets/audio/you_won.mp3");
         this.loseAudio = new Audio("../assets/audio/you_lost_short.mp3");
         this.winAudio.volume = 0.0;
         this.loseAudio.volume = 0.0;
         $("#enter").click(() => this.onEnterButtonClicked());
-        $("#connect").click(() => this.onConnectButtonClicked());
         $("#close").click(() => this.onCloseButtonClicked());
         $("#menu-button").click(() => this.onMenuButtonClicked());
         $("#create-button").click(() => this.onCreateButtonClicked());
@@ -439,43 +410,56 @@ class MainScreen {
         $("#name, #room").keypress(() => {
             $("#name, #room").removeClass("required");
         });
+        $("#room").on("input", () => (this.roomName = $("#room").val()));
         $("#game-screen").hide();
         $("#main-screen").hide();
         $("#menu-button").hide();
         $("#close").hide();
     }
-    onConnectButtonClicked() {
-        if (!$("#room").val()) {
-            $("#room").addClass("required");
-        }
-        else {
-            $("#connect").hide();
-            $("#close").show();
-            $("#create-button").show();
-            $("#create-button").prop("disabled", false);
-            $("#connect-to-button").show();
-            $("#connect-to-button").prop("disabled", false);
-            this.inializeConnection();
-        }
-    }
+    // private onConnectButtonClicked() {
+    // if (!$("#room").val()) {
+    //   $("#room").addClass("required");
+    // } else {
+    //     $("#connect").hide();
+    //     $("#close").show();
+    //     $("#create-button").show();
+    //     $("#connect-to-button").show();
+    //     $("#connect-to-button").prop("disabled", false);
+    //     this.inializeConnection();
+    //   }
+    // }
     onCloseButtonClicked() {
         this.closePreviousConnection();
         this.detachPreviousGameBoardController();
         this.viewRoomsList();
     }
     onCreateButtonClicked() {
-        $("#create-button").prop("disabled", true);
-        $("#connect-to-button").prop("disabled", true);
-        this.socketConnectionManager.send(`{"type":"CREATE", "room":${this.roomName},"playerId":"${this.playerId}"}`);
+        if (!$("#room").val()) {
+            $("#room").addClass("required");
+        }
+        else {
+            let message = JSON.stringify(new RoomCreateEmitMessage(this.playerId, this.roomName));
+            this.socketConnectionManager.send(message);
+        }
     }
     onConnectToRoomButtonClicked() {
-        $("#create-button").prop("disabled", true);
-        $("#connect-to-button").prop("disabled", true);
-        this.socketConnectionManager.send(`{"type":"CONNECT", "room":${this.roomName},"playerId":"${this.playerId}"}`);
+        let message = JSON.stringify(new RoomConnectEmitMessage(this.playerId, this.roomId));
+        this.socketConnectionManager.send(message);
     }
     onEnterButtonClicked() {
-        this.winAudio.play();
-        this.loseAudio.play();
+        // this.winAudio.play();
+        // this.loseAudio.play();
+        let allSounds = [
+            ...GameBoardController.playerClickedSounds,
+            ...GameBoardController.opponentClickedSounds,
+            this.loseAudio,
+            this.winAudio
+        ];
+        allSounds.forEach(value => {
+            value.volume = 0.0;
+            value.play();
+        });
+        this.inializeConnection();
         this.viewEnterToMain();
     }
     viewEnterToMain() {
@@ -486,6 +470,10 @@ class MainScreen {
             $("#name-label").text(`Player: ${$("#name").val()}`);
             $("#start-screen").hide();
             $("#main-screen").show();
+            $("#close").show();
+            $("#create-button").show();
+            $("#connect-to-button").show();
+            $("#connect-to-button").prop("disabled", false);
         }
     }
     onMenuButtonClicked() {
@@ -503,19 +491,14 @@ class MainScreen {
         this.detachPreviousGameBoardController();
         this.gameBoardController = new GameBoardController(isFirstPlayer ? Shape.X : Shape.O);
         let _this = this;
-        this.gameBoardController.setCellClickListener((cellIndex) => {
+        this.gameBoardController.setCellClickListener((cellOccupied) => {
             _this.gameBoardController.enableGameBoard(false);
-            _this.onCellSelected(cellIndex);
+            _this.onCellSelected(cellOccupied);
         });
     }
-    /**
-     * Invoked when
-     * @param cellIndex index from 0 to 8
-     */
-    onCellSelected(cellIndex) {
-        let msg = `{"type":"TURN","room":${this.roomName},
-              "playerId":"${this.playerId}","cell":${cellIndex}}`;
-        this.socketConnectionManager.send(msg);
+    onCellSelected(cellOccupied) {
+        let message = JSON.stringify(new TurnEmitMessage(this.playerId, this.roomId, cellOccupied));
+        this.socketConnectionManager.send(message);
     }
     /**
      * Detaches existing game board controller from UI.
@@ -533,14 +516,12 @@ class MainScreen {
      */
     inializeConnection() {
         this.playerName = $("#name").val();
-        // Auto casting to 'number'?
-        this.roomName = $("#room").val();
-        this.connect(this.roomName, this.playerName);
+        this.connect(this.playerName);
     }
-    connect(room, username) {
+    connect(username) {
         this.closePreviousConnection();
         this.socketConnectionManager = new SocketConnectionManager();
-        this.socketConnectionManager.connect(room.toString(), username);
+        this.socketConnectionManager.connect(username);
         this.socketConnectionManager.setMessageListener(event => this.onMessageEvent(event));
     }
     onMessageEvent(messageEvent) {
@@ -549,6 +530,7 @@ class MainScreen {
         if (json.type == RegisteredReceivedMessage.getType()) {
             let message = json;
             this.playerId = message.playerId;
+            this.requestRoomsList();
         }
         else if (json.type == RoomCreateReceiveMessage.getType()) {
             this.roomCreated(json);
@@ -565,6 +547,11 @@ class MainScreen {
         else if (json.type == RoomListReceiveMessage.getType()) {
             this.updateRoomsList(json);
         }
+    }
+    requestRoomsList() {
+        let message = JSON.stringify(new RoomListEmitMessage());
+        console.log("let message = JSON.stringify(new RoomListEmitMessage());");
+        this.socketConnectionManager.send(message);
     }
     // TODO: implement UI for the list of rooms
     updateRoomsList(arg0) {
@@ -597,7 +584,9 @@ class MainScreen {
     }
     startGame(msg) {
         this.viewStartGame();
-        this.createGameBoardController(msg.firstPlayerId == this.playerId);
+        let isPlayersTurn = msg.firstPlayerId == this.playerId;
+        this.createGameBoardController(isPlayersTurn);
+        this.gameBoardController.enableGameBoard(isPlayersTurn);
     }
     viewStartGame() {
         $("#main-screen").hide();
