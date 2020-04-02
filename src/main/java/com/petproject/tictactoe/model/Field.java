@@ -1,8 +1,7 @@
 package com.petproject.tictactoe.model;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -10,32 +9,28 @@ import javax.json.JsonArrayBuilder;
 
 public class Field {
 
-    private List<Mark> field;
+    private List<Cell> field = new ArrayList<>(9);
+    private Cell lastModifiedCell;
 
-    Field(Size size) {
-        populateField(size);
+    public boolean canFillCell(Cell cell) {
+        return !this.field.contains(cell);
     }
 
-    private void populateField(Size size) {
-        this.field = Stream.generate(() -> Mark.EMPTY)
-            .limit(size.getSize())
-            .collect(Collectors.toList());
-    }
-
-    public boolean canSetMark(int cell) {
-        return this.field.get(cell).equals(Mark.EMPTY);
-    }
-
-    public boolean setMark(Mark mark, int cell) {
-        if (canSetMark(cell)) {
-            this.field.set(cell, mark);
+    public boolean fillCell(Cell cell) {
+        if (canFillCell(cell)) {
+            lastModifiedCell = cell;
+            this.field.add(cell);
             return true;
         } else {
             return false;
         }
     }
 
-    public List<Mark> getField() {
+    public Cell lastModifiedCell() {
+        return lastModifiedCell;
+    }
+
+    public List<Cell> getField() {
         return field;
     }
 
@@ -50,7 +45,7 @@ public class Field {
 
     public JsonArray toJsonArray() {
         JsonArrayBuilder json = Json.createArrayBuilder();
-        field.forEach(cell -> json.add(cell.getMarkName()));;
+        field.forEach(cell -> json.add(cell.toString()));
         return json.build();
     }
 
