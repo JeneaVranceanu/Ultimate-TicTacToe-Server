@@ -1,42 +1,46 @@
 package com.petproject.tictactoe.model;
 
+import java.util.Date;
 import java.util.Objects;
-
-import com.petproject.tictactoe.model.Field.Size;
 
 public class Game {
 
     private Field field;
     private State state;
-    private int room;
+    private Room room;
     private Player playerX;
     private Player playerO;
+    private Player nextTurnPlayer;
 
     public Game() {
-        this.state = State.INIT;
+        this.state = State.INITIAL;
     }
 
-    public void createGame(int room, Player playerX, Size fieldSize) {
-        field = new Field(fieldSize);
+    public void createGame(Player playerX, long roomId, String roomName) {
+        field = new Field();
         this.playerX = playerX;
-        playerX.setMark(Mark.X);
-        this.room = room;
-        state = State.WAIT;
+        playerX.setShape(Shape.X);
+        nextTurnPlayer = playerX;
+        this.room = new Room(roomId, roomName, 1, new Date().getTime());
+        state = State.CREATED;
     }
 
     public void connectToGame(Player playerO) {
         this.playerO = playerO;
-        playerO.setMark(Mark.O);
-        state = State.START;
+        playerO.setShape(Shape.O);
+        state = State.STARTED;
+        this.room.setPlayerCount(2);
     }
 
-    public void updateFieldState(int cell, Mark mark) {
-        if (field.canSetMark(cell)) {
-            field.setMark(mark, cell);
-            if (mark.equals(Mark.X)) {
+    public void updateFieldState(Cell cell) {
+        if (field.canFillCell(cell)) {
+            field.fillCell(cell);
+            if (cell.getShape().equals(Shape.X)) {
                 state = State.O_TURN;
+                nextTurnPlayer = playerX;
             } else {
                 state = State.X_TURN;
+                nextTurnPlayer = playerO;
             }
         }
     }
@@ -48,6 +52,10 @@ public class Game {
 
         return String.format("Game info: \nPlayerX: %s\nPlayerO: %s\nField: %s\nState: %s", xState, oState,
                 field.toString(), state.name());
+    }
+
+    public Player getNextTurnPlayer() {
+        return nextTurnPlayer;
     }
 
     public Player getPlayerX() {
@@ -66,23 +74,26 @@ public class Game {
         return state;
     }
 
-    public int getRoom() {
+    public Room getRoom() {
         return room;
+    }
+
+    public void removePlayer(Player player) {
+        if (player.equals(playerX)) {
+            playerX = null;
+        } else {
+            playerO = null;
+        }
+    }
+
+    public boolean playerExist(Player player) {
+        return ((playerX != null && playerX.equals(player)) || (playerO != null && playerO.equals(player)));
     }
 
     public enum State {
 
-        INIT("INIT"), WAIT("WAIT"), START("START"), X_TURN("X_TURN"), O_TURN("O_TURN"), END("END");
+        INITIAL, CREATED, STARTED, X_TURN, O_TURN, FINISHED;
 
-        private String state;
-
-        State(String state) {
-            this.state = state;
-        }
-
-        public String getState() {
-            return state;
-        }
     }
 
 }
