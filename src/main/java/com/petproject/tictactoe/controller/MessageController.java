@@ -125,7 +125,7 @@ public class MessageController {
                 message.setPlayerId(json.getString("playerId"));
                 JsonObject jsonCell = json.getJsonObject("cellOccupied");
                 message.setCellOccupied(
-                        new Cell(jsonCell.getInt("x"), jsonCell.getInt("y"), Shape.valueOf(json.getString("shape"))));
+                        new Cell(jsonCell.getInt("x"), jsonCell.getInt("y"), Shape.valueOf(jsonCell.getString("shape"))));
             default:
                 /** Default as ROOM_LIST */
                 break;

@@ -44,7 +44,8 @@ public class ConnectionController {
     public void onMessage(String rawMessage) {
         /** Get message type */
         Message message = mController.parseMessage(rawMessage);
-        proccessMessage(message);
+        logger.info("{}", proccessMessage(message).info());
+
     }
 
     public void onClose(String session, String username) {
@@ -59,27 +60,26 @@ public class ConnectionController {
         // proccessMessage(message);
     }
 
-    private void proccessMessage(Message message) throws NoSuchElementException {
+    private Game proccessMessage(Message message) throws NoSuchElementException {
+        Game game = null;
         switch (message.getType()) {
             case ROOM_CREATE:
-                Game createdGame = new Game();
+                game = new Game();
                 Player playerX = getPlayerById(message.getPlayerId());
                 if (!Objects.isNull(playerX)) {
-                    createdGame.createGame(playerX, getRoomId(), message.getRoomName());
+                    game.createGame(playerX, getRoomId(), message.getRoomName());
                 }
-                games.add(createdGame);
-                bService.broadcast(mController.onCreateResponse(createdGame));
-                logger.info("Game created: {}", createdGame.info());
+                games.add(game);
+                bService.broadcast(mController.onCreateResponse(game));
                 break;
             case ROOM_CONNECT:
-                Game connectedToGame = getGameByRoom(message.getRoomId());
+                game = getGameByRoom(message.getRoomId());
                 Player playerO = getPlayerById(message.getPlayerId());
-                connectedToGame.connectToGame(playerO);
-                bService.broadcast(mController.onConnectResponse(connectedToGame));
-                logger.info("Game started: {}", connectedToGame.info());
+                game.connectToGame(playerO);
+                bService.broadcast(mController.onConnectResponse(game));
                 break;
             case ROOM_CLOSE:
-                Game closingGame = getGameByRoom(message.getRoomId());
+                game = getGameByRoom(message.getRoomId());
                 Player closingPlayer = getPlayerById(message.getPlayerId());
                 // connectedToGame.connectToGame(playerO);
                 // this.closeGame(Game);
@@ -87,16 +87,16 @@ public class ConnectionController {
                 // logger.info("Game closed: {} Reason: ", connectedToGame.info());
                 break;
             case TURN:
-                Game game = getGameByRoom(message.getRoomId());
+                game = getGameByRoom(message.getRoomId());
                 Player player = getPlayerById(message.getPlayerId());
                 game.updateFieldState(message.getCellOccupied());
                 // game.checkWinCondition
                 bService.broadcast(mController.onTurnResponse(game));
-                logger.info("Player: {} make turn", player.getShape().getShapeName());
                 break;
             default:
                 // Room list
         }
+        return game;
     }
 
     public void closeGame(Game game, boolean isEnded) {
