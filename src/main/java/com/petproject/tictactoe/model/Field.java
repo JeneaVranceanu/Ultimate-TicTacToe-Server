@@ -1,5 +1,6 @@
 package com.petproject.tictactoe.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.json.Json;
@@ -7,7 +8,7 @@ import javax.json.JsonArrayBuilder;
 
 public class Field {
 
-    private List<Cell> field;
+    private List<Cell> field = new ArrayList<>(9);
     private Cell lastModifiedCell;
 
     public boolean canFillCell(Cell cell) {
