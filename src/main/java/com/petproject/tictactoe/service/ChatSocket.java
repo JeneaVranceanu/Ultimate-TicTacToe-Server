@@ -1,6 +1,7 @@
 package com.petproject.tictactoe.service;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -10,7 +11,7 @@ import javax.websocket.server.ServerEndpoint;
 
 import org.slf4j.Logger;
 
-import com.petproject.tictactoe.controller.ConnectionController;
+import com.petproject.tictactoe.controller.EventController;
 
 import javax.websocket.Session;
 
@@ -18,23 +19,22 @@ import javax.websocket.Session;
 @ApplicationScoped
 public class ChatSocket {
 
+    @Inject
     Logger logger;
-    ConnectionController cnController;
-
-    public ChatSocket(Logger logger, ConnectionController connectionController) {
-        this.logger = logger;
-        this.cnController = connectionController;
-    }
+    @Inject
+    EventController eventController;
+    @Inject
+    BroadcastService broadcastService;
 
     @OnOpen
     public void onOpen(Session session, @PathParam("username") String username) {
-        cnController.onOpen(session, username);
+        broadcastService.broadcast(eventController.onOpen(session, username));
     }
 
     @OnMessage
-    public void onMessage(String message, @PathParam("username") String username) {
+    public void onMessage(String message, @PathParam("username") String username, Session session) {
         logger.info("Message received: {}", message);
-        cnController.onMessage(message);
+        broadcastService.broadcast(eventController.onMessage(message, session));
     }
 
     @OnClose

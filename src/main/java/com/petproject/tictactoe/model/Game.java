@@ -1,6 +1,5 @@
 package com.petproject.tictactoe.model;
 
-import java.util.Date;
 import java.util.Objects;
 
 public class Game {
@@ -21,15 +20,15 @@ public class Game {
         this.playerX = playerX;
         playerX.setShape(Shape.X);
         nextTurnPlayer = playerX;
-        this.room = new Room(roomId, roomName, 1, new Date().getTime());
+        this.room = new Room(roomId, roomName, 1);
         state = State.CREATED;
     }
 
     public void connectToGame(Player playerO) {
         this.playerO = playerO;
         playerO.setShape(Shape.O);
-        state = State.STARTED;
-        this.room.setPlayerCount(2);
+        state = State.X_TURN;
+        this.room.setPlayersCount(2);
     }
 
     public void updateFieldState(Cell cell) {
@@ -91,9 +90,27 @@ public class Game {
         return ((playerX != null && playerX.equals(player)) || (playerO != null && playerO.equals(player)));
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Game g = (Game) o;
+        return field.toString().equals(g.getField().toString()) &&
+            state.equals(g.getState()) &&
+            room.toJson().equals(g.getRoom().toJson()) &&
+            playerX.equals(g.getPlayerX()) && 
+            playerO.equals(g.getPlayerO()) &&
+            nextTurnPlayer.equals(g.getNextTurnPlayer());
+
+    }
+
     public enum State {
 
-        INITIAL, CREATED, STARTED, X_TURN, O_TURN, FINISHED;
+        INITIAL, CREATED, X_TURN, O_TURN, FINISHED;
 
     }
 
