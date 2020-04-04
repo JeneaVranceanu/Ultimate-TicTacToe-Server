@@ -38,13 +38,15 @@ public class ChatSocket {
     }
 
     @OnClose
-    public void onClose(Session session, @PathParam("username") String username) {       
+    public void onClose(Session session, @PathParam("username") String username) {    
+        eventController.onClose(session, username);
         logger.info("Close ws connection with parameters: {}", username);
     }
 
     @OnError
     public void onError(Session session, @PathParam("username") String username, Throwable throwable) {
-        logger.error("", throwable);
+        eventController.onError(session, username, throwable);
+        logger.error("{}", throwable);
     }
 
   

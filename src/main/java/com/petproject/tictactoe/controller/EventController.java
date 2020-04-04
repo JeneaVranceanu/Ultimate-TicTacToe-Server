@@ -54,18 +54,29 @@ public class EventController {
 
     }
 
-    public Map<Player, Message> onClose(String session, String username) {
-        /** Get message type */
-        // Message message = mController.parseMessage(rawMessage);
-        // proccessMessage(message);
-        return new HashMap<>();
+    // TODO TEST
+    public Map<Player, Message> onClose(Session session, String username) {
+        Map<Player, Message> onCloseResponse = new HashMap<>();
+        Player disconnectedPlayer = getPlayerBySessionId(session.getId());
+        if (disconnectedPlayer != null) {
+            if (!isPlayerFree(disconnectedPlayer)) {
+                onCloseResponse.putAll(messageController.onCloseResponse(getGameByPlayer(disconnectedPlayer)));
+            }
+        }
+        return onCloseResponse;
     }
 
-    public Map<Player, Message> onError(String session, String username, Throwable throwable) {
-        /** Get message type */
-        // Message message = mController.parseMessage(rawMessage);
-        // proccessMessage(message);
-        return new HashMap<>();
+    // TODO TEST
+    public Map<Player, Message> onError(Session session, String username, Throwable throwable) {
+        Map<Player, Message> onErrorResponse = new HashMap<>();
+        Player disconnectedPlayer = getPlayerBySessionId(session.getId());
+        if (disconnectedPlayer != null) {
+            if (!isPlayerFree(disconnectedPlayer)) {
+                onErrorResponse.putAll(messageController.onCloseResponse(getGameByPlayer(disconnectedPlayer)));
+            }
+            removeUnavailablePlayer(disconnectedPlayer);
+        }
+        return onErrorResponse;
     }
 
     private Map<Player, Message> proccessMessage(Message message) throws NoSuchElementException {
@@ -99,6 +110,7 @@ public class EventController {
                         return messageController.onCloseResponse(game);
                     }
                 }
+                // TODO Make custom Exeptions 
                 throw new NoSuchElementException("Cannot close the Game with given PlayerId!");
             case TURN:
                 game = getGameByRoomId(message.getRoomId());
@@ -110,8 +122,8 @@ public class EventController {
                 }
                 throw new NoSuchElementException("Cannot make turn with given Player!");
             default:
-                // Room list
-                return messageController.roomList(game);
+                player = getPlayerById(message.getPlayerId());
+                return messageController.onRoomListResponse(player, games);
         }
     }
 
@@ -132,16 +144,20 @@ public class EventController {
         return players.stream().filter(p -> p.getId().equals(playerId)).findFirst().orElseThrow();
     }
 
+    public Player getPlayerBySessionId(String sessionId) {
+        return players.stream().filter(p -> p.getSession().getId().equals(sessionId)).findFirst().orElse(null);
+    }
+    
+    public boolean isPlayerFree(Player player) {
+        return games.stream().noneMatch(g -> g.playerExist(player)) && player.getShape().equals(Shape.EMPTY);
+    }
+
     public Game getGameByRoomId(long roomId) throws NoSuchElementException {
         return games.stream().filter(g -> g.getRoom().getId() == roomId).findFirst().orElseThrow();
     }
 
     public Game getGameByPlayer(Player player) {
         return games.stream().filter(g -> g.playerExist(player)).findFirst().orElseThrow();
-    }
-
-    public boolean isPlayerFree(Player player) {
-        return games.stream().noneMatch(g -> g.playerExist(player)) && player.getShape().equals(Shape.EMPTY);
     }
 
     public boolean isGameInPlayStage(Game game) {
