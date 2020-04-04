@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -63,9 +64,10 @@ public class MessageController {
         return map;
     }
 
-    // TODO
-    public Map<Player, Message> roomList(Game game) {
-        return new HashMap<>();
+    public Map<Player, Message> onRoomListResponse(Player player, List<Game> games) {
+        Map<Player, Message> map = new HashMap<>();
+        map.put(player, roomList(games.stream().map(g -> g.getRoom()).collect(Collectors.toList())));
+        return map;
     }
 
     // TODO
@@ -159,7 +161,7 @@ public class MessageController {
                 message.setCellOccupied(new Cell(jsonCell.getInt("x"), jsonCell.getInt("y"),
                         Shape.valueOf(jsonCell.getString("shape"))));
             default:
-                /** Default as ROOM_LIST */
+                message.setPlayerId(json.getString("playerId"));
                 break;
         }
         return message;

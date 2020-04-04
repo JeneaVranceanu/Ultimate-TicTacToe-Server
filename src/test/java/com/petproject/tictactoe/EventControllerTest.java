@@ -2,6 +2,7 @@ package com.petproject.tictactoe;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.websocket.Session;
@@ -114,9 +115,11 @@ public class EventControllerTest {
         message.setPlayerId("randomstring");
         message.setRoomName("Good room");
 
-
         // FIXIT
-            /** Tests is asynchronous? freeIdCounter fails when connectToRoom Test run with that Test  */ 
+        /**
+         * Tests is asynchronous? freeIdCounter fails when connectToRoom Test run with
+         * that Test
+         */
         // long freeIdCounter = eventController.getCurrentRoomIdCounter();
         Map<Player, Message> actual = eventController.onMessage(message.toString(), session);
         Message m = actual.values().stream().findFirst().get();
@@ -256,6 +259,61 @@ public class EventControllerTest {
         /** Assert that returnedMessage equals GAME_START message */
         Assertions.assertEquals(returnedMessageX, gameStartMessage);
 
+    }
+
+    @Test
+    public void roomListTest() {
+
+        Session session = Mockito.mock(Session.class);
+
+        Player px1 = eventController.onOpen(session, "PX1").keySet().stream().findFirst().get();
+        Player po1 = eventController.onOpen(session, "PO1").keySet().stream().findFirst().get();
+        Player px2 = eventController.onOpen(session, "PX2").keySet().stream().findFirst().get();
+        Player po2 = eventController.onOpen(session, "PO2").keySet().stream().findFirst().get();
+
+        Message firstCreateMessage = new Message();
+        firstCreateMessage.setType(MessageType.ROOM_CREATE);
+        firstCreateMessage.setPlayerId(px1.getId());
+        firstCreateMessage.setRoomName("");
+        Message secondCreateMessage = new Message();
+        secondCreateMessage.setType(MessageType.ROOM_CREATE);
+        secondCreateMessage.setPlayerId(px2.getId());
+        secondCreateMessage.setRoomName("");
+
+        eventController.onMessage(firstCreateMessage.toString(), session);
+        eventController.onMessage(secondCreateMessage.toString(), session);
+
+        Message firstConnectMessage = new Message();
+        firstConnectMessage.setType(MessageType.ROOM_CONNECT);
+        firstConnectMessage.setPlayerId(po1.getId());
+        firstConnectMessage.setRoomId(eventController.getGameByPlayer(px1).getRoom().getId());
+        Message secondConnectMessage = new Message();
+        secondConnectMessage.setType(MessageType.ROOM_CONNECT);
+        secondConnectMessage.setPlayerId(po2.getId());
+        secondConnectMessage.setRoomId(eventController.getGameByPlayer(px2).getRoom().getId());
+
+        eventController.onMessage(firstConnectMessage.toString(), session);
+        eventController.onMessage(secondConnectMessage.toString(), session);
+
+        Message roomListMessage = new Message();
+        roomListMessage.setType(MessageType.ROOM_LIST);
+        roomListMessage.setPlayerId(px1.getId());
+
+        /** Assert that player exist */
+        Assertions.assertEquals(eventController.getPlayerById(px1.getId()), px1);
+
+        Map<Player, Message> roomListResponse = eventController.onMessage(roomListMessage.toString(), session);
+        Player returnedPlayer = roomListResponse.keySet().stream().findFirst().get();
+        Message returnedMessage = roomListResponse.values().stream().findFirst().get();
+
+        /** Assert that returnedPlayer equals px1 Player */
+        Assertions.assertEquals(returnedPlayer, px1);
+
+        Message expectedMessage = messageController
+                .roomList(eventController.getGames().stream().map(g -> g.getRoom()).collect(Collectors.toList()));
+
+        /** Assert that returnedMessage equals expectedMessage */
+        Assertions.assertEquals(returnedMessage, expectedMessage);
     }
 
 }
