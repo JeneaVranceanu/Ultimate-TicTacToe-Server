@@ -28,13 +28,15 @@ public class EventController {
     Logger logger;
     @Inject
     MessageController messageController;
+    @Inject
+    WinConditionController winConditionController;
 
     private List<Player> players = Collections.synchronizedList(new ArrayList<Player>());
     private List<Game> games = Collections.synchronizedList(new ArrayList<Game>());
     private AtomicLong roomIdCounter = new AtomicLong(0L);
 
     public Map<Player, Message> onOpen(Session session, String username) {
-        Player player = new Player(username, Shape.EMPTY, session);
+        Player player = new Player(username, session);
         players.add(player);
         return messageController.onOpenResponse(player);
     }
@@ -43,7 +45,7 @@ public class EventController {
         /** Get message type */
         Message message = messageController.parseMessage(rawMessage);
         try {
-            return proccessMessage(message);
+            return processMessage(message);
         } catch (NoSuchElementException e) {
             logger.error("{}", e);
             return messageController.onErrorResponse(session);
@@ -79,7 +81,18 @@ public class EventController {
         return onErrorResponse;
     }
 
-    private Map<Player, Message> proccessMessage(Message message) throws NoSuchElementException {
+    /**
+     * Process message and execute all core logic according to MessageType
+     * 
+     * @param message received Message
+     * @return Map<Player, Message> map with Players and Messages assigned to this Players 
+     * might return null if no errors was but core logic restrict some actions. 
+     * As example if Player which exist in game but should wait for his turn 
+     * send turn message will be returned null.
+     * 
+     * @throws NoSuchElementException if Message contain wrong data
+     */
+    private Map<Player, Message> processMessage(Message message) throws NoSuchElementException {
         Game game = null;
         Player player = null;
         switch (message.getType()) {
@@ -110,17 +123,24 @@ public class EventController {
                         return messageController.onCloseResponse(game);
                     }
                 }
-                // TODO Make custom Exeptions 
+                // TODO Make custom Exeptions
                 throw new NoSuchElementException("Cannot close the Game with given PlayerId!");
             case TURN:
                 game = getGameByRoomId(message.getRoomId());
                 player = getPlayerById(message.getPlayerId());
-                if (isGameInPlayStage(game) && game.playerExist(player) && game.getNextTurnPlayer().equals(player)) {
-                    game.updateFieldState(message.getCellOccupied());
-                    // game.checkWinCondition
-                    return messageController.onTurnResponse(game);
+                if (game.playerExist(player)) {
+                    if (game.getNextTurnPlayer().equals(player)) {                       
+                        game.updateFieldState(message.getCellOccupied());
+                        // TODO Implement Field handler logic
+                        winConditionController.checkWinCondition(game);
+                        // TODO Remove Game from games List after game ends
+                        // TODO Remove Players Shape - > assign EMPTY after game end
+                        return messageController.onTurnResponse(game);
+                    }
+                } else {
+                    throw new NoSuchElementException("Cannot make turn!");
                 }
-                throw new NoSuchElementException("Cannot make turn with given Player!");
+                return null;
             default:
                 player = getPlayerById(message.getPlayerId());
                 return messageController.onRoomListResponse(player, games);
@@ -147,7 +167,7 @@ public class EventController {
     public Player getPlayerBySessionId(String sessionId) {
         return players.stream().filter(p -> p.getSession().getId().equals(sessionId)).findFirst().orElse(null);
     }
-    
+
     public boolean isPlayerFree(Player player) {
         return games.stream().noneMatch(g -> g.playerExist(player)) && player.getShape().equals(Shape.EMPTY);
     }
