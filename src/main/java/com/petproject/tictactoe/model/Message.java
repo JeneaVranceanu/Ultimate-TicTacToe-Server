@@ -3,6 +3,7 @@ package com.petproject.tictactoe.model;
 import java.util.List;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 
@@ -99,10 +100,10 @@ public class Message {
         this.rooms = rooms;
     }
 
-    public String getStringRoomArray() {
+    public JsonArray getRoomArray() {
         JsonArrayBuilder json = Json.createArrayBuilder();
-        rooms.forEach(r -> json.add(r.toString()));
-        return json.build().toString();
+        rooms.forEach(r -> json.add(r.toJson()));
+        return json.build();
     }
 
     public void setRoomArray(List<Room> rooms) {
@@ -138,18 +139,31 @@ public class Message {
         }
 
         if (boardState != null) {
-            json.add("boardState", boardState.toString());
+            json.add("boardState", boardState.toJsonArray());
         }
 
         if (cellOccupied != null) {
-            json.add("cellOccupied", cellOccupied.toString());
+            json.add("cellOccupied", cellOccupied.toJson());
         }
 
         if (rooms != null) {
-            json.add("rooms", getStringRoomArray());
+            json.add("rooms", getRoomArray());
         }
 
         return json.build().toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Message m = (Message) o;
+
+        return this.toString().equals(m.toString());
     }
 
     public enum MessageType {
@@ -157,7 +171,7 @@ public class Message {
         REGISTERED("REGISTERED"), ROOM_CREATE("ROOM_CREATE"), 
         ROOM_CLOSE("ROOM_CLOSE"), ROOM_CONNECT("ROOM_CONNECT"),
         GAME_START("GAME_START"), GAME_END("GAME_END"),
-        TURN("TURN"), ROOM_LIST("ROOM_LIST");
+        TURN("TURN"), ROOM_LIST("ROOM_LIST"), ERROR("ERROR");
 
         private String messageType;
 

@@ -4,10 +4,13 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.websocket.Session;
 
 import com.petproject.tictactoe.model.Cell;
 import com.petproject.tictactoe.model.Field;
@@ -23,11 +26,8 @@ import org.slf4j.Logger;
 @ApplicationScoped
 public class MessageController {
 
+    @Inject
     Logger logger;
-
-    public MessageController(Logger logger) {
-        this.logger = logger;
-    }
 
     public Map<Player, Message> onOpenResponse(Player player) {
         Message message = registered(player.getId());
@@ -37,9 +37,8 @@ public class MessageController {
     }
 
     public Map<Player, Message> onCreateResponse(Game game) {
-        Message message = roomCreate(game.getRoom().getRoomId());
         Map<Player, Message> map = new HashMap<>();
-        map.put(game.getPlayerX(), message);
+        map.put(game.getPlayerX(), roomCreate(game.getRoom().getId(), game.getRoom().getRoomName()));
         return map;
     }
 
@@ -58,21 +57,50 @@ public class MessageController {
         return map;
     }
 
-    private Message registered(String playerId) {
+    public Map<Player, Message> onCloseResponse(Game game) {
+        Map<Player, Message> map = new HashMap<>();
+        Message message = roomClose();
+        map.put(game.getPlayerX(), message);
+        return map;
+    }
+
+    public Map<Player, Message> onRoomListResponse(Player player, List<Game> games) {
+        Map<Player, Message> map = new HashMap<>();
+        map.put(player, roomList(games.stream().map(g -> g.getRoom()).collect(Collectors.toList())));
+        return map;
+    }
+
+    // TODO
+    public Map<Player, Message> onErrorResponse(Session session) {
+        Player player = new Player("", Shape.EMPTY, session);
+        Message message = error();
+        Map<Player, Message> map = new HashMap<>();
+        map.put(player, message);
+        return map;
+    }
+
+    public Message registered(String playerId) {
         Message m = new Message();
         m.setType(MessageType.REGISTERED);
         m.setPlayerId(playerId);
         return m;
     }
 
-    private Message roomCreate(long roomId) {
+    public Message roomCreate(long roomId, String roomName) {
         Message m = new Message();
         m.setType(MessageType.ROOM_CREATE);
         m.setRoomId(roomId);
+        m.setRoomName(roomName);
         return m;
     }
 
-    private Message gameStart(String firstPlayerId, String secondPlayerId) {
+    public Message roomClose() {
+        Message m = new Message();
+        m.setType(MessageType.ROOM_CLOSE);
+        return m;
+    }
+
+    public Message gameStart(String firstPlayerId, String secondPlayerId) {
         Message m = new Message();
         m.setType(MessageType.GAME_START);
         m.setFirstPlayerId(firstPlayerId);
@@ -80,14 +108,14 @@ public class MessageController {
         return m;
     }
 
-    private Message gameEnd(String winnerPlayerId) {
+    public Message gameEnd(String winnerPlayerId) {
         Message m = new Message();
         m.setType(MessageType.GAME_END);
         m.setWinnerPlayerId(winnerPlayerId);
         return m;
     }
 
-    private Message turn(Field boardState, Cell cellOccupied) {
+    public Message turn(Field boardState, Cell cellOccupied) {
         Message m = new Message();
         m.setType(MessageType.TURN);
         m.setBoardState(boardState);
@@ -95,10 +123,16 @@ public class MessageController {
         return m;
     }
 
-    private Message roomList(List<Room> rooms) {
+    public Message roomList(List<Room> rooms) {
         Message m = new Message();
         m.setType(MessageType.ROOM_LIST);
         m.setRooms(rooms);
+        return m;
+    }
+
+    public Message error() {
+        Message m = new Message();
+        m.setType(MessageType.ERROR);
         return m;
     }
 
@@ -124,10 +158,10 @@ public class MessageController {
                 message.setRoomId(json.getInt("roomId"));
                 message.setPlayerId(json.getString("playerId"));
                 JsonObject jsonCell = json.getJsonObject("cellOccupied");
-                message.setCellOccupied(
-                        new Cell(jsonCell.getInt("x"), jsonCell.getInt("y"), Shape.valueOf(jsonCell.getString("shape"))));
+                message.setCellOccupied(new Cell(jsonCell.getInt("x"), jsonCell.getInt("y"),
+                        Shape.valueOf(jsonCell.getString("shape"))));
             default:
-                /** Default as ROOM_LIST */
+                message.setPlayerId(json.getString("playerId"));
                 break;
         }
         return message;
