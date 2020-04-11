@@ -1,17 +1,5 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="UTF-8">
-    <title>Quarkus Chat!</title>
-    <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly.min.css">
-    <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/css/patternfly-additions.min.css">
-    <link rel="stylesheet" type="text/css" href="style.css">
-</head>
-
-<body>
+<template>
+  <div>
     <nav class="navbar navbar-default navbar-pf" role="navigation">
         <div class="navbar-header">
             <h1 id="name-label"></h1>
@@ -64,16 +52,48 @@
     <div id="game-screen" class="canvas_container">
         <canvas id="canvas" width="512" height="512" class="canvas"></canvas>
     </div>
+  </div>
+</template>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/patternfly/3.24.0/js/patternfly.min.js"></script>
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
+import HelloWorld from './components/HelloWorld.vue';
+import MainScreen from './typescript/index';
 
-    <!-- <script src="script/controller.js" type="text/javascript"></script>
-    <script src="script/ws.js" type="text/javascript"></script>
-    <script src="script/view.js" type="text/javascript"></script>
-    <script src="script/index.js" type="text/javascript"></script> -->
-    <script src="script/ts_main.js" type="text/javascript"></script>
-</body>
+// @Component({
+//   components: {
+//     MainScreen
+//   },
+// })
+export default Vue.extend({
+    // data() {
+    //   return {
+    //     user: {} as User // Declaring reactive data as type User
+    //   }
+    // },
+    mounted() {
+      new MainScreen()
+      // this.user = {
+      //   firstName: `Dave`,
+      //   lastName: `Berning`,
+      //   twitterHandle: `@daveberning`,
+      //   location: {
+      //     city: `Cincinnati`,
+      //     state: `OH`
+      //   }
+      // }
+    }
+  })
+    
+</script>
 
-</html>
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
