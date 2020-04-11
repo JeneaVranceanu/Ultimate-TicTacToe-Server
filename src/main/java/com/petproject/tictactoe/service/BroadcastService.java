@@ -26,9 +26,11 @@ public class BroadcastService {
     }
 
     public void broadcast(Map<Player, Message> messages) {
-        messages.entrySet().forEach(entry -> {
-           broadcastTo(entry.getKey(), entry.getValue());
-        });
+        if (messages != null) {
+            messages.entrySet().forEach(entry -> {
+                broadcastTo(entry.getKey(), entry.getValue());
+            });
+        }
     }
 
     private void broadcastTo(Player player, Message message) {

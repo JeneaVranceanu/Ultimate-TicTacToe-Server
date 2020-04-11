@@ -17,12 +17,14 @@ import com.petproject.tictactoe.model.Game.State;
 import com.petproject.tictactoe.model.Message.MessageType;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
+@Disabled
 public class EventControllerTest {
 
     @Inject
@@ -71,7 +73,7 @@ public class EventControllerTest {
 
         /** Assert that Player exist in List<Players> */
         Assertions.assertTrue(eventController.getPlayers().contains(player));
-        /** Assert thath proccessMessage return right Player */
+        /** Assert thath processMessage return right Player */
         Assertions.assertEquals(player, samePlayer);
         /** Assert that Player has X shape */
         Assertions.assertEquals(player.getShape(), Shape.X);
