@@ -11,9 +11,11 @@ public class Field {
 
     private List<Cell> field = new ArrayList<>(9);
     private Cell lastModifiedCell;
+    private Format format = Format.DEFAULT;
 
     public boolean canFillCell(Cell cell) {
-        return !this.field.contains(cell);
+        return !this.field.stream().anyMatch(c -> cell.getX() == c.getX() && cell.getY() == c.getY())
+                && this.field.size() < this.format.getFormat();
     }
 
     public boolean fillCell(Cell cell) {
@@ -38,6 +40,14 @@ public class Field {
         return field.size();
     }
 
+    public Format getFormat() {
+        return format;
+    }
+
+    public boolean isFull() {
+        return field.size() == format.getFormat();
+    }
+
     @Override
     public String toString() {
         return toJsonArray().toString();
@@ -49,18 +59,18 @@ public class Field {
         return json.build();
     }
 
-    public enum Size {
+    public enum Format {
 
         DEFAULT(9), MEDIUM(16);
 
-        private int size;
+        private int format;
 
-        Size(int size) {
-            this.size = size;
+        Format(int format) {
+            this.format = format;
         }
 
-        public int getSize() {
-            return size;
+        public int getFormat() {
+            return format;
         }
     }
 
