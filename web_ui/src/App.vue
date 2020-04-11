@@ -1,22 +1,90 @@
 <template>
   <div>
-    <NavBarComponent :navBarTitle="title"></NavBarComponent>
-    <router-view></router-view>
+    <nav class="navbar navbar-default navbar-pf" role="navigation">
+        <div class="navbar-header">
+            <h1 id="name-label"></h1>
+            <a class="navbar-brand header">
+                <h1><strong>Tic Tac Toe</strong></h1>
+            </a>
+            <button id="menu-button" class="btn btn-primary" type="button">Back</button>
+        </div>
+    </nav>
+    <div id="start-screen" class="container">
+        <br />
+        <div class="row">
+            <div class="form">
+                <input id="name" name="name" type="text" autocomplete="off" maxlength="15" required>
+                <label for="name" class="label-name">
+                    <span class="content-name">
+                        Name
+                    </span>
+                </label>
+            </div>
+        </div>
+        <div class="row">
+            <button id="enter" class="action-button btn btn-primary" type="button">Enter</button>
+        </div>
+    </div>
+    <div id="main-screen" class="container">
+        <div class="row">
+            <div class="form">
+                <input id="room" name="room" type="text" autocomplete="off" maxlength="3" required>
+                <label for="room" class="label-name">
+                    <span class="content-name room">
+                        Room ID
+                    </span>
+                </label>
+            </div>
+        </div>
+        <div class="row">
+            <label for="chat" id="chat-label">
+                <span>
+                    Open rooms #
+                </span>
+            </label>
+            <!-- <button id="connect" class="action-button btn btn-primary" type="button">Connect</button> -->
+            <button id="close" class="action-button btn btn-primary" type="button">Close</button>
+            <button id="create-button" class="action-button btn btn-primary" type="button">Create Room</button>
+            <button id="connect-to-button" class="action-button btn btn-primary" type="button">Connect to Room</button>
+            <textarea id="chat" name="chat"></textarea>
+        </div>
+    </div>
+    <div id="game-screen" class="canvas_container">
+        <canvas id="canvas" width="512" height="512" class="canvas"></canvas>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
-import NavBarComponent from "./components/NavBarComponent.vue";
+import { Component, Vue } from 'vue-property-decorator';
+import HelloWorld from './components/HelloWorld.vue';
+import MainScreen from './typescript/index';
 
-@Component({
-  components: {
-    NavBarComponent
-  }
-})
-export default class App extends Vue {
-  title = "TicTacToe";
-}
+// @Component({
+//   components: {
+//     MainScreen
+//   },
+// })
+export default Vue.extend({
+    // data() {
+    //   return {
+    //     user: {} as User // Declaring reactive data as type User
+    //   }
+    // },
+    mounted() {
+      new MainScreen()
+      // this.user = {
+      //   firstName: `Dave`,
+      //   lastName: `Berning`,
+      //   twitterHandle: `@daveberning`,
+      //   location: {
+      //     city: `Cincinnati`,
+      //     state: `OH`
+      //   }
+      // }
+    }
+  })
+    
 </script>
 
 <style>

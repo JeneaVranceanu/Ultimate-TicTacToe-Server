@@ -35,6 +35,7 @@
   ],
   "exclude": [
     "node_modules"
+<<<<<<< HEAD
   ],
 
   "strictPropertyInitialization": false,
@@ -44,4 +45,7 @@
       "ignoreProperties": true,
     }
   }
+=======
+  ]
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
 }

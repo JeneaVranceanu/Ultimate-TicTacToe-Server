@@ -2,7 +2,10 @@
 node_modules
 node
 /dist
+<<<<<<< HEAD
 /public/assets
+=======
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
 
 # local env files
 .env.local
@@ -20,4 +23,8 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
+<<<<<<< HEAD
 *.sw?
+=======
+*.sw?
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.

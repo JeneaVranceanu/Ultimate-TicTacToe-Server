@@ -1,6 +1,9 @@
 import GameBoardController from './game_board'
+<<<<<<< HEAD
 import RoomsList from '../components/RoomsList.vue'
 import Emit from 'vue-property-decorator'
+=======
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
 import { Shape } from './game_board'
 import { SocketConnectionManager } from './socket_manager'
 import { RoomCreateEmitMessage, RoomConnectEmitMessage, Turn,
@@ -128,6 +131,49 @@ export default class MainScreen {
   }
 
   /**
+<<<<<<< HEAD
+=======
+   * Creates game board controller for the canvas element
+   * where the game play is happening.
+   *
+   * @param isFirstPlayer boolean argument based on which playing shape is selected
+   */
+  private createGameBoardController(isFirstPlayer: boolean) {
+    this.detachPreviousGameBoardController()
+    this.gameBoardController = new GameBoardController(
+      isFirstPlayer ? Shape.X : Shape.O
+    )
+
+    this.gameBoardController.setCellClickListener((cellOccupied: Turn) => {
+      this.gameBoardController.enableGameBoard(false)
+      this.onCellSelected(cellOccupied)
+    })
+  }
+
+  private onCellSelected(cellOccupied: Turn) {
+    const message = JSON.stringify(
+      new TurnEmitMessage(this.playerId, this.roomId!, cellOccupied)
+    )
+    this.socketConnectionManager.send(message)
+  }
+
+  /**
+   * Detaches existing game board controller from UI.
+   * Deletes reference to the game board controller.
+   */
+  private detachPreviousGameBoardController() {
+    if (
+      this.gameBoardController != null &&
+      this.gameBoardController !== undefined
+    ) {
+      this.gameBoardController.detach()
+    }
+
+    delete this.gameBoardController
+  }
+
+  /**
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
    * Initializes socket connection.
    */
   private inializeConnection() {
@@ -149,7 +195,11 @@ export default class MainScreen {
     this.viewPrintToChat(`${messageEvent.data as string}`)
 
     const json = JSON.parse(messageEvent.data as string)
+<<<<<<< HEAD
     
+=======
+    TurnEmitMessage
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
     if (json.type == RegisteredReceivedMessage.getType()) {
       const message = json as RegisteredReceivedMessage
       this.playerId = message.playerId
@@ -169,12 +219,19 @@ export default class MainScreen {
 
   private requestRoomsList() {
     const message = JSON.stringify(new RoomListEmitMessage())
+<<<<<<< HEAD
+=======
+    console.log('let message = JSON.stringify(new RoomListEmitMessage())')
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
     this.socketConnectionManager.send(message)
   }
 
   // TODO: implement UI for the list of rooms
   private updateRoomsList(arg0: RoomListReceiveMessage) {
+<<<<<<< HEAD
     // this.roomsList.$data.rooms = arg0.rooms
+=======
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
     this.viewPrintToChat(JSON.stringify(arg0))
   }
 
@@ -183,7 +240,10 @@ export default class MainScreen {
       msg.cellOccupied.x,
       msg.cellOccupied.y
     )
+<<<<<<< HEAD
     this.gameBoardController.enableGameBoard(true)
+=======
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
   }
 
   private endGame(msg: GameEndedReceiveMessage) {

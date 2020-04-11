@@ -11,6 +11,7 @@
 
 
     <properties>
+<<<<<<< HEAD
         <!-- Versions for quarkus used (primarily) plugins -->
 	    <compiler-plugin.version>3.8.1</compiler-plugin.version>
 	    <maven.compiler.parameters>true</maven.compiler.parameters>
@@ -24,6 +25,19 @@
 	    <quarkus.platform.version>1.3.2.Final</quarkus.platform.version>
 	    <surefire-plugin.version>3.0.0-M4</surefire-plugin.version>
 
+=======
+        <compiler-plugin.version>3.8.1</compiler-plugin.version>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <quarkus-plugin.version>1.1.1.Final</quarkus-plugin.version>
+        <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
+        <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
+        <quarkus.platform.version>1.1.1.Final</quarkus.platform.version>
+        <surefire-plugin.version>2.22.1</surefire-plugin.version>
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
         <!-- Versions for added plugins -->
         <version.frontend-maven-plugin>1.9.1</version.frontend-maven-plugin>
         <version.resources-plugin>3.1.0</version.resources-plugin>
@@ -42,6 +56,10 @@
         </dependencies>
     </dependencyManagement>
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -62,12 +80,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+<<<<<<< HEAD
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>3.1.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
+=======
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-undertow-websockets</artifactId>
         </dependency>
@@ -244,8 +265,12 @@
                                     <npmVersion>6.14.4</npmVersion>
                                 </configuration>
                             </execution>
+<<<<<<< HEAD
                             
                             <!-- <execution>
+=======
+                            <execution>
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
                                 <id>npm prune</id>
                                 <goals>
                                     <goal>npm</goal>
@@ -253,15 +278,23 @@
                                 <configuration>
                                     <arguments>prune</arguments>
                                 </configuration>
+<<<<<<< HEAD
                             </execution> -->
 
+=======
+                            </execution>
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
                             <!-- Install all project dependencies -->
                             <execution>
                                 <id>npm install</id>
                                 <goals>
                                     <goal>npm</goal>
                                 </goals>
+<<<<<<< HEAD
                                 <!-- optional: default phase is "generate-resources" --> 
+=======
+                                <!-- optional: default phase is "generate-resources" -->
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.
                                 <phase>generate-resources</phase>
                                 <!-- Optional configuration which provides for running any npm command -->
                                 <configuration>

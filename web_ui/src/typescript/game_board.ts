@@ -180,6 +180,13 @@ export default class GameBoardController {
   }
 
   private setCellOccupied(xPosition: number, yPosition: number, shape: Shape) {
+<<<<<<< HEAD:web_ui/src/typescript/game_board.ts
+=======
+    console.log(`setCellOccupied ${xPosition} ${yPosition}`)
+    console.log(this.boardCellsStatus)
+    console.log(this.boardCellsStatus[yPosition])
+    console.log(this.boardCellsStatus[yPosition][xPosition])
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.:src/main/resources/META-INF/resources/typescript/game_board.ts
     this.boardCellsStatus[yPosition][xPosition] = shape
   }
   /**
@@ -188,6 +195,13 @@ export default class GameBoardController {
    * @param yPosition vertical postition of a cell [0,2]
    */
   private isCellOccupied(xPosition: number, yPosition: number): boolean {
+<<<<<<< HEAD:web_ui/src/typescript/game_board.ts
+=======
+    console.log(`isCellOccupied ${xPosition} ${yPosition}`)
+    console.log(this.boardCellsStatus)
+    console.log(this.boardCellsStatus[yPosition])
+    console.log(this.boardCellsStatus[yPosition][xPosition])
+>>>>>>> b94e51e... - Vue project created. Web ui uses Vue from now on.:src/main/resources/META-INF/resources/typescript/game_board.ts
     return this.boardCellsStatus[yPosition][xPosition] != null
   }
 
