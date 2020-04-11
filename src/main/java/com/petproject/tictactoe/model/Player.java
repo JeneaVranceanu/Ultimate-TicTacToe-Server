@@ -42,7 +42,7 @@ public class Player {
     @Override
     public String toString() {
         return Json.createObjectBuilder()
-            .add("sessionId", session.getId())
+            .add("sessionId", session.getId() != null ? session.getId() : "")
             .add("shape", shape.getShapeName())
             .add("name", name)
             .add("id", id)
@@ -58,7 +58,7 @@ public class Player {
             return false;
         }
         Player player = (Player) o;
-        return session.getId().equals(player.session.getId()) &&
+        return (session.getId() != null ? session.getId().equals(player.session.getId()) : true) &&
                 shape.equals(player.getShape()) &&
                 name.equals(player.name) &&
                 id.equals(player.id);

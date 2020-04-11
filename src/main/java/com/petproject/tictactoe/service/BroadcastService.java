@@ -7,7 +7,7 @@ import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import com.petproject.tictactoe.controller.ConnectionController;
+import com.petproject.tictactoe.controller.EventController;
 import com.petproject.tictactoe.model.Message;
 import com.petproject.tictactoe.model.Player;
 
@@ -17,12 +17,12 @@ import org.slf4j.Logger;
 public class BroadcastService {
 
     Logger logger;
-    ConnectionController cnController;
+    EventController eventController;
     List<Player> unavailablePlayersList = Collections.synchronizedList(new ArrayList<Player>());
 
-    public BroadcastService(Logger logger, ConnectionController cnController) {
+    public BroadcastService(Logger logger, EventController eventController) {
         this.logger = logger;
-        this.cnController = cnController;
+        this.eventController = eventController;
     }
 
     public void broadcast(Map<Player, Message> messages) {
@@ -35,7 +35,7 @@ public class BroadcastService {
         player.getSession().getAsyncRemote().sendObject(message.toString(), result -> {
             if (result.getException() != null) {
                 logger.error("Unable to send message to: {}", player.getName());
-                cnController.removeUnavailablePlayer(player);
+                eventController.removeUnavailablePlayer(player);
             } else {
                 logger.info("Send message: {} to: {} ", message, player.getName());
             }
