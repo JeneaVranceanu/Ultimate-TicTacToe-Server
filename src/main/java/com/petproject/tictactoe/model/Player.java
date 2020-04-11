@@ -12,9 +12,9 @@ public class Player {
     private String name;
     private String id;
 
-    public Player(String name, Shape shape, Session session) {
+    public Player(String name, Session session) {
         this.name = name;
-        this.shape = shape;
+        this.shape = Shape.EMPTY;
         this.session = session;
         this.id = UUID.randomUUID().toString();
     }

@@ -74,6 +74,17 @@ public class Game {
         return state;
     }
 
+    public boolean isEnded() {
+        return this.state.equals(State.WIN_X) 
+            || this.state.equals(State.WIN_O)
+            || this.state.equals(State.DRAW)
+            || this.state.equals(State.DISCONNECTED);
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
     public Room getRoom() {
         return room;
     }
@@ -110,7 +121,7 @@ public class Game {
 
     public enum State {
 
-        INITIAL, CREATED, X_TURN, O_TURN, FINISHED;
+        INITIAL, CREATED, X_TURN, O_TURN, WIN_X, WIN_O, DRAW, DISCONNECTED;
 
     }
 
