@@ -7,13 +7,15 @@ import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 
+import com.petproject.tictactoe.model.Game.State;
+
 public class Message {
 
     private MessageType type;
     private String playerId;
     private String firstPlayerId;
     private String secondPlayerId;
-    private String winnerPlayerId;
+    private State reason;
     private Long roomId;
     private String roomName;
     private Field boardState;
@@ -52,12 +54,12 @@ public class Message {
         return secondPlayerId;
     }
 
-    public void setWinnerPlayerId(String winnerPlayerId) {
-        this.winnerPlayerId = winnerPlayerId;
+    public void setReason(State reason) {
+        this.reason = reason;
     }
 
-    public String getWinnerPlayerId() {
-        return winnerPlayerId;
+    public State getReason() {
+        return reason;
     }
 
     public void setRoomId(long roomId) {
@@ -128,6 +130,10 @@ public class Message {
 
         if (secondPlayerId != null) {
             json.add("secondPlayerId", secondPlayerId);
+        }
+
+        if (reason != null) {
+            json.add("reason", reason.name());
         }
 
         if (roomId != null) {

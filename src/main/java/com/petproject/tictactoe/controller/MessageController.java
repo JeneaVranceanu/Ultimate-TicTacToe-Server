@@ -52,8 +52,15 @@ public class MessageController {
 
     public Map<Player, Message> onTurnResponse(Game game) {
         Map<Player, Message> map = new HashMap<>();
-        Message message = turn(game.getField(), game.getField().lastModifiedCell());
-        map.put(game.getNextTurnPlayer(), message);
+        Message message = null;
+        if (game.isEnded()) {
+            message = gameEnd(game);
+            map.put(game.getPlayerX(), message);
+            map.put(game.getPlayerO(), message);
+        } else {
+            message = turn(game.getField(), game.getField().lastModifiedCell());
+            map.put(game.getNextTurnPlayer(), message);
+        }
         return map;
     }
 
@@ -72,7 +79,7 @@ public class MessageController {
 
     // TODO
     public Map<Player, Message> onErrorResponse(Session session) {
-        Player player = new Player("", Shape.EMPTY, session);
+        Player player = new Player("", session);
         Message message = error();
         Map<Player, Message> map = new HashMap<>();
         map.put(player, message);
@@ -108,10 +115,11 @@ public class MessageController {
         return m;
     }
 
-    public Message gameEnd(String winnerPlayerId) {
+    public Message gameEnd(Game game) {
         Message m = new Message();
         m.setType(MessageType.GAME_END);
-        m.setWinnerPlayerId(winnerPlayerId);
+        m.setReason(game.getState());
+        m.setBoardState(game.getField());
         return m;
     }
 
