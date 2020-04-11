@@ -45,7 +45,7 @@ public class Field {
 
     public JsonArray toJsonArray() {
         JsonArrayBuilder json = Json.createArrayBuilder();
-        field.forEach(cell -> json.add(cell.toString()));
+        field.forEach(cell -> json.add(cell.toJson()));
         return json.build();
     }
 
