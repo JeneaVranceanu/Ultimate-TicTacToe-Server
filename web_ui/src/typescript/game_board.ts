@@ -180,10 +180,6 @@ export default class GameBoardController {
   }
 
   private setCellOccupied(xPosition: number, yPosition: number, shape: Shape) {
-    console.log(`setCellOccupied ${xPosition} ${yPosition}`)
-    console.log(this.boardCellsStatus)
-    console.log(this.boardCellsStatus[yPosition])
-    console.log(this.boardCellsStatus[yPosition][xPosition])
     this.boardCellsStatus[yPosition][xPosition] = shape
   }
   /**
@@ -192,10 +188,6 @@ export default class GameBoardController {
    * @param yPosition vertical postition of a cell [0,2]
    */
   private isCellOccupied(xPosition: number, yPosition: number): boolean {
-    console.log(`isCellOccupied ${xPosition} ${yPosition}`)
-    console.log(this.boardCellsStatus)
-    console.log(this.boardCellsStatus[yPosition])
-    console.log(this.boardCellsStatus[yPosition][xPosition])
     return this.boardCellsStatus[yPosition][xPosition] != null
   }
 

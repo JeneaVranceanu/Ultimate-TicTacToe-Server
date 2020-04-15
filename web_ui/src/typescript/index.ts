@@ -1,4 +1,6 @@
 import GameBoardController from './game_board'
+import RoomsList from '../components/RoomsList.vue'
+import Emit from 'vue-property-decorator'
 import { Shape } from './game_board'
 import { SocketConnectionManager } from './socket_manager'
 import { RoomCreateEmitMessage, RoomConnectEmitMessage, Turn,
@@ -187,7 +189,7 @@ export default class MainScreen {
     this.viewPrintToChat(`${messageEvent.data as string}`)
 
     const json = JSON.parse(messageEvent.data as string)
-    TurnEmitMessage
+    
     if (json.type == RegisteredReceivedMessage.getType()) {
       const message = json as RegisteredReceivedMessage
       this.playerId = message.playerId
@@ -207,12 +209,12 @@ export default class MainScreen {
 
   private requestRoomsList() {
     const message = JSON.stringify(new RoomListEmitMessage())
-    console.log('let message = JSON.stringify(new RoomListEmitMessage())')
     this.socketConnectionManager.send(message)
   }
 
   // TODO: implement UI for the list of rooms
   private updateRoomsList(arg0: RoomListReceiveMessage) {
+    // this.roomsList.$data.rooms = arg0.rooms
     this.viewPrintToChat(JSON.stringify(arg0))
   }
 
@@ -221,6 +223,7 @@ export default class MainScreen {
       msg.cellOccupied.x,
       msg.cellOccupied.y
     )
+    this.gameBoardController.enableGameBoard(true)
   }
 
   private endGame(msg: GameEndedReceiveMessage) {
