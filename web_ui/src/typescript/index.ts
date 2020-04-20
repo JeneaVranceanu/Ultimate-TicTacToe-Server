@@ -128,46 +128,6 @@ export default class MainScreen {
   }
 
   /**
-   * Creates game board controller for the canvas element
-   * where the game play is happening.
-   *
-   * @param isFirstPlayer boolean argument based on which playing shape is selected
-   */
-  private createGameBoardController(isFirstPlayer: boolean) {
-    this.detachPreviousGameBoardController()
-    this.gameBoardController = new GameBoardController(
-      isFirstPlayer ? Shape.X : Shape.O
-    )
-
-    this.gameBoardController.setCellClickListener((cellOccupied: Turn) => {
-      this.gameBoardController.enableGameBoard(false)
-      this.onCellSelected(cellOccupied)
-    })
-  }
-
-  private onCellSelected(cellOccupied: Turn) {
-    const message = JSON.stringify(
-      new TurnEmitMessage(this.playerId, this.roomId!, cellOccupied)
-    )
-    this.socketConnectionManager.send(message)
-  }
-
-  /**
-   * Detaches existing game board controller from UI.
-   * Deletes reference to the game board controller.
-   */
-  private detachPreviousGameBoardController() {
-    if (
-      this.gameBoardController != null &&
-      this.gameBoardController !== undefined
-    ) {
-      this.gameBoardController.detach()
-    }
-
-    delete this.gameBoardController
-  }
-
-  /**
    * Initializes socket connection.
    */
   private inializeConnection() {

@@ -12,7 +12,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 
 @Component
 export default class RoomList extends Vue {
-  roomList!: Room[];
+  @Prop() roomList!: Room[];
   /**
    * updateRoomsList
    */
