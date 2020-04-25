@@ -38,10 +38,7 @@ export default class StartScreenComponent extends Vue {
   name = '';
   
   register(): void {
-    window.alert(`Register: ${this.name}`);
-
-    // router.push("./main");
-    
+    window.alert(`Nice to meet you, ${this.name}!`);
     this.$router.push('./main');
   }
 }

@@ -1,48 +1,68 @@
 <template>
-  <div>
-    <button id="close" class="action-button btn btn-primary" type="button">Close</button>
-    <button id="create-button" class="action-button btn btn-primary" type="button">Create Room</button>
+  <div id="main-screen" class="container">
+    <div class="row">
+      <button
+      id="close"
+      class="action-button btn btn-primary"
+      type="button"
+      @click="leaveRoom"
+    >Leave Room</button>
+    <button
+      id="create-button"
+      class="action-button btn btn-primary"
+      type="button"
+      @click="createRoom"
+    >Create Room</button>
     <button
       id="connect-to-button"
       class="action-button btn btn-primary"
       type="button"
+      @click="connectToSelectedRoom"
     >Connect to Room</button>
+    </div>
+    <div class="row">
     <textarea id="chat" name="chat"></textarea>
+    </div>
+    <div class="row">
+    <RoomList></RoomList>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Vue } from "vue-property-decorator";
+import { Vue, Component } from "vue-property-decorator";
 import MainScreen from ".././typescript/index";
-//import RoomList from ".././components/RoomList.vue";
+import RoomList from "../components/RoomList.vue";
+import router from "../../src/router";
+import App from "../App.vue";
+import GameVuexStore from "../../src/vuex_store";
 
-export default Vue.extend({
+@Component({
   components: {
-    //RoomList
-  },
-  data() {
-    return {
-      title: "matt"
-    };
-  },
-  mounted() {
-    new MainScreen();
-  },
-  methods: {
-    buttonClicked() {
-      this.router.push("/asd");
-    }
+    RoomList
   }
-});
-</script>
+})
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+export default class MainScreenComponent extends Vue {
+  name = "";
+
+  leaveRoom(): void {
+    GameVuexStore.commit('increment')
+    // window.alert(`And so I left ${GameVuexStore.state.count}`);
+  }
+
+  createRoom(): void {
+    GameVuexStore.commit('increment')
+    // window.alert(`And so I created ${GameVuexStore.state.count}`);
+  }
+
+  connectToSelectedRoom(): void {
+    GameVuexStore.commit('increment')
+    // window.alert(`And so I connected ${GameVuexStore.state.count}`);
+  }
+
+  enter(): void {
+    window.alert(`Register: ${this.name}`);
+  }
 }
-</style>
+</script>

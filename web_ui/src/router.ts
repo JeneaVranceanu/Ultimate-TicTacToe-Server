@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import StartScreenComponent from '@/components/StartScreenComponent.vue'
 import MainScreenComponent from '@/components/MainScreenComponent.vue'
+import GameScreenComponent from '@/components/GameScreenComponent.vue'
 
 Vue.use(Router)
 
@@ -15,6 +16,10 @@ export default new Router({
     {
       path: '/main',
       component: MainScreenComponent
+    },
+    {
+      path: '/game',
+      component: GameScreenComponent
     }
   ]
 })

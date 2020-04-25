@@ -4,7 +4,7 @@
       <h1 id="name-label"></h1>
       <a class="navbar-brand header">
         <h1>
-          <strong>{{ this.navBarTitle }}</strong>
+          <strong>{{ this.title }}</strong>
         </h1>
       </a>
       <button id="menu-button" class="btn btn-primary" type="button">Back</button>
@@ -15,21 +15,24 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import router from '../router';
+import GameVuexStore from "../../src/vuex_store";
 
 @Component
 export default class NavBarComponent extends Vue {
   @Prop() public navBarTitle!: string;
 
   get title() {
-    return this.navBarTitle;
-    // && this.navBarTitle.length > 0
-    //   ? this.navBarTitle
-    //   : "Default title";
+    return `${this.navBarTitle} ${GameVuexStore.state.count}`;
   }
 
   // Component methods can be declared as instance methods
   onClick(): void {
-    window.alert("Alert triggered");
+    if (window.history.length > 1) {
+      this.$router.back()
+    } else if (this.$router.currentRoute.path != "/") {
+      this.$router.replace("/")
+    }
   }
 }
 </script>
